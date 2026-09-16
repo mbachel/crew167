@@ -1,0 +1,927 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Icon from '../components/Icon.astro';
+import PhotoScroller from '../components/PhotoScroller.astro';
+import { FLAG_LOCATIONS, locationAddress, locationMapUrl } from '../data/flag-locations';
+import { FLAG_METHODS, FLAG_SOURCES } from '../data/flag-methods';
+import { CONTACT } from '../config';
+import { pageCopy } from '../lib/sections';
+
+/**
+ * Photos for this page live in `public/flag/` and are served exactly as they
+ * are — files under public/ bypass Astro's image pipeline, so there's no
+ * resizing, no format conversion and no srcset.
+ *
+ * After adding or replacing any photo here, run `npm run images`. Phone photos
+ * are usually HEIC or AVIF even when the filename says .png, and HEIC will not
+ * display in Chrome, Firefox or Edge at all. That script rewrites them as
+ * correctly-named JPEGs at sensible sizes and keeps the originals.
+ *
+ * The portrait beside the story is `karis.jpg`; the collage is
+ * `collage1.jpg` … `collage7.jpg`; the cutting strip is `cutting1-7.jpg`.
+ */
+const portraitSrc = '/flag/karis.jpg';
+
+/**
+ * The collage. `area` matches a letter in the grid-template-areas maps in the
+ * stylesheet below — to reshape the collage, redraw those maps.
+ *
+ * Slots are shaped to match each photo, so nothing is cropped or floating in
+ * dead space:
+ *   a, b -> 3:2 landscape   c, d, e -> square   f -> 2:1 panorama   g -> portrait
+ * Photos are shown with object-fit: contain, so the whole frame is always
+ * visible; a slot that doesn't match exactly just leaves a little breathing
+ * room rather than cutting the picture off.
+ */
+const collage = [
+  {
+    src: '/flag/collage1.jpg',
+    area: 'a',
+    anchor: 'top',
+    alt: 'Crew 167 and guests assembled in formation for the flag retirement ceremony',
+  },
+  {
+    src: '/flag/collage2.jpg',
+    area: 'b',
+    anchor: 'top',
+    alt: 'Crew 167 members lined up with their awards at the ceremony',
+  },
+  {
+    src: '/flag/collage4.jpg',
+    area: 'c',
+    alt: 'Karis Hunt with a U.S. Air Force member in front of the flag',
+  },
+  {
+    src: '/flag/collage6.jpg',
+    area: 'd',
+    alt: 'Karis Hunt with a U.S. Army sergeant at the ceremony',
+  },
+  {
+    src: '/flag/collage7.jpg',
+    area: 'e',
+    alt: 'Retiring worn flags in the ceremonial fire',
+  },
+  {
+    src: '/flag/collage5.jpg',
+    area: 'f',
+    alt: 'The military band that played at the flag retirement ceremony',
+  },
+  {
+    src: '/flag/collage3.jpg',
+    area: 'g',
+    anchor: 'top',
+    alt: 'Karis Hunt being recognised by service members at the ceremony',
+  },
+];
+
+/**
+ * The cutting sequence — a side-scrolling strip of portrait photos, four at a
+ * time, stepping one per button press.
+ *
+ * Every photo is rendered at 3:4 and cropped to fill, so the strip stays even
+ * whatever shape the source file is. Export replacements at 702 x 936 to avoid
+ * any cropping at all.
+ *
+ * These must be a format browsers can actually display — JPEG, PNG or WebP.
+ * HEIC straight off an iPhone will not render in Chrome, Firefox or Edge, even
+ * if the file is renamed to .png.
+ */
+const cuttingSteps = Array.from({ length: 7 }, (_, i) => ({
+  src: `/flag/cutting${i + 1}.jpg`,
+  alt: `Cutting a flag for retirement, step ${i + 1} of 7`,
+}));
+
+const copy = await pageCopy('flag-retirement');
+const Journey = copy('journey');
+const Dropoff = copy('dropoff');
+const Why = copy('why');
+
+const categories = [...new Set(FLAG_LOCATIONS.map((loc) => loc.category))];
+---
+
+<BaseLayout
+  title="Flag Retirement"
+  description="How to respectfully retire a worn American flag, and where to drop one off across Mecklenburg and York County. A resource from Venturing Crew 167."
+>
+  <PageHeader
+    eyebrow="A Crew 167 resource"
+    title="Flag Retirement"
+    lede="Karis Hunt, a member of Crew 167, created this page as part of her Summit project. It is maintained by the crew as a public resource."
+  />
+
+  {/* ------------------------------------------------------------ the story */}
+  <section class="section">
+    <div class="wrap flag-intro">
+      <div class="flag-intro__body" data-reveal>
+        <p class="eyebrow">Karis Hunt</p>
+        <h2>My journey with flag retirement</h2>
+        <div class="prose"><Journey /></div>
+      </div>
+
+      <figure class="flag-intro__media" data-reveal>
+        <img src={portraitSrc} alt="Karis Hunt at a Crew 167 flag retirement ceremony" loading="lazy" decoding="async" />
+      </figure>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------ locations */}
+  <section class="section section--sunken" id="dropoff">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Mecklenburg & York County</p>
+        <h2>Where to drop off a flag</h2>
+        <div class="prose"><Dropoff /></div>
+      </div>
+
+      <div class="locations" data-reveal>
+        <div class="locations__controls">
+          <div class="locations__search">
+            <Icon name="search" />
+            <label class="visually-hidden" for="loc-search">Search drop-off locations</label>
+            <input
+              type="search"
+              id="loc-search"
+              placeholder="Search by name, street, or city…"
+              autocomplete="off"
+              data-loc-search
+            />
+          </div>
+
+          <div class="chips" role="group" aria-label="Filter by type">
+            <button type="button" class="chip is-active" data-loc-filter="all" aria-pressed="true">
+              All
+            </button>
+            {
+              categories.map((category) => (
+                <button type="button" class="chip" data-loc-filter={category} aria-pressed="false">
+                  {category}
+                </button>
+              ))
+            }
+          </div>
+
+          <p class="small muted locations__count" role="status" aria-live="polite" data-loc-count></p>
+        </div>
+
+        <ul class="locations__list">
+          {
+            FLAG_LOCATIONS.map((loc) => (
+              <li
+                class="location"
+                data-loc-item
+                data-category={loc.category}
+                data-haystack={`${loc.name} ${locationAddress(loc)} ${loc.category}`.toLowerCase()}
+              >
+                <div class="location__main">
+                  <h3>{loc.name}</h3>
+                  <p class="location__address">{locationAddress(loc)}</p>
+                  {loc.needsVerification && (
+                    <p class="location__warn small">
+                      <Icon name="search" />
+                      {loc.needsVerification}
+                    </p>
+                  )}
+                </div>
+                <div class="location__meta">
+                  <span class="tag">{loc.category}</span>
+                  <a class="location__map" href={locationMapUrl(loc)} rel="noopener">
+                    Directions
+                    <Icon name="external" />
+                  </a>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+
+        <p class="locations__empty" data-loc-empty hidden>
+          No locations match that. <button type="button" data-loc-reset>Reset the filters</button>.
+        </p>
+      </div>
+    </div>
+  </section>
+  
+  {/* ------------------------------------------------------------------ folding */}
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Flag Folding</p>
+        <h2>Educational Video</h2>
+      </div>
+      <div class="prose" data-reveal><iframe width="1120" height="630" src="https://www.youtube.com/embed/A6DfJuvRdGU?si=_pvhHBtlKaFOSUSb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------------ images */}
+  <section class="section section--tight section--sunken">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Retirement Ceremony</p>
+        <h2>Karis' Summit Project</h2>
+      </div>
+      <ul class="collage" data-reveal>
+        {
+          collage.map((item) => (
+            <li class="collage__item" style={`--area:${item.area};--anchor:${item.anchor ?? 'center'}`}>
+              <img src={item.src} alt={item.alt} loading="lazy" decoding="async" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------------ facts */}
+  <section class="section section--tight">
+    <div class="wrap flag-why">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Flag Retirement</p>
+        <h2>Quick Facts</h2>
+      </div>
+      <h3>Why retire the American flag?</h3>
+      <div class="prose" data-reveal><Why /></div>
+      <br />
+    </div>
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <h3>How do you retire the American flag?</h3>
+      </div>
+
+      <div class="methods" data-reveal>
+        <div class="methods__tabs" role="tablist" aria-label="Flag retirement methods">
+          {
+            FLAG_METHODS.map((method, i) => (
+              <button
+                type="button"
+                role="tab"
+                id={`tab-${method.id}`}
+                aria-controls={`panel-${method.id}`}
+                aria-selected={i === 0 ? 'true' : 'false'}
+                tabindex={i === 0 ? 0 : -1}
+                class="methods__tab"
+                data-method-tab
+              >
+                <span class="methods__tab-num">{i + 1}</span>
+                {method.short}
+                {method.preferred && <span class="tag tag--brass methods__pref">Preferred</span>}
+              </button>
+            ))
+          }
+        </div>
+
+        {
+          FLAG_METHODS.map((method, i) => (
+            <div
+              class="methods__panel"
+              role="tabpanel"
+              id={`panel-${method.id}`}
+              aria-labelledby={`tab-${method.id}`}
+              tabindex="0"
+              hidden={i !== 0}
+              data-method-panel
+            >
+              <h3>{method.name}</h3>
+              <p class="methods__intro">{method.intro}</p>
+              <ol class="methods__steps">
+                {method.steps.map((step) => (
+                  <li>{step}</li>
+                ))}
+              </ol>
+              {method.source && (
+                <p class="small muted methods__source">
+                  Procedure from{' '}
+                  <a href={method.source.href} rel="noopener">
+                    {method.source.label}
+                    <Icon name="external" />
+                  </a>
+                </p>
+              )}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------- cutting */}
+  <section class="section section--tight section--sunken">
+    <div class="wrap" data-reveal>
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Flag Retirement</p>
+        <h2>Cutting a Flag</h2>
+      </div>
+      <PhotoScroller images={cuttingSteps} label="Cutting a flag, step by step" />
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------- sources */}
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Further reading</p>
+        <h2>Sources</h2>
+      </div>
+      <ul class="sources" data-reveal>
+        {
+          FLAG_SOURCES.map((source) => (
+            <li>
+              {source.href ? (
+                <a href={source.href} rel="noopener">
+                  <strong>{source.label}</strong>
+                  <Icon name="external" />
+                </a>
+              ) : (
+                <strong>{source.label}</strong>
+              )}
+              <span class="small muted">{source.detail}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="flag-credit small muted">
+        This page started as a Summit project by <strong>Karis Hunt</strong>, and is maintained by
+        Crew 167 as a public resource. Spot something out of date?{' '}
+        <a href={`mailto:${CONTACT.presidentEmail}`}>Let us know</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ---------------------------------------------------------------- intro */
+  .flag-intro {
+    display: grid;
+    /* The photo column is narrow, because the photo's width is dictated by the
+       text height, not by the column — a wide column would just leave slack. */
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.8fr);
+    gap: clamp(1.75rem, 1.2rem + 3vw, 3.5rem);
+    /* stretch: the row is sized by the story text, and the photo column
+       stretches to match it. See .flag-intro__media for why that works. */
+    align-items: stretch;
+  }
+  @media (max-width: 880px) {
+    .flag-intro {
+      grid-template-columns: 1fr;
+    }
+  }
+  .flag-intro__body .eyebrow {
+    margin-bottom: 0.8rem;
+  }
+  .flag-intro__body h2 {
+    margin-bottom: 1.1rem;
+  }
+
+  /* Portrait photo, cropped to whatever height the story column ends up being.
+     The grid row is sized by the text, the figure stretches to that row, and
+     the image fills the figure — so the two columns always end level. */
+  /* The story text sets the row height; the photo matches it exactly, and its
+     width follows from its own proportions — so the whole picture is shown,
+     never cropped and never stretched.
+
+     Two details make that work:
+     - The <img> is absolutely positioned, so it contributes no intrinsic
+       height. In normal flow it reports its own 981px, becomes the tallest
+       thing in the row and drives the layout instead of following it.
+     - height:100% with width:auto means the width is computed from the height
+       and the file's real ratio. object-fit: contain is only a guard for the
+       case where max-width has to clamp it. */
+  .flag-intro__media {
+    --portrait-min: 20rem;
+
+    margin: 0;
+    position: relative;
+    min-height: var(--portrait-min);
+  }
+  .flag-intro__media :global(img) {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* Hugs the outer edge, so any slack in the column merges with the gutter
+       between the two columns rather than splitting either side of the photo. */
+    right: 0;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+  }
+
+  @media (max-width: 880px) {
+    /* Single column: nothing to match, so drop back to the photo's own shape. */
+    .flag-intro__media {
+      min-height: 0;
+      max-width: 20rem;
+      margin-inline: auto;
+    }
+    .flag-intro__media :global(img) {
+      position: static;
+      height: auto;
+      width: 100%;
+    }
+  }
+
+  .flag-why .prose {
+    max-width: var(--measure);
+  }
+
+  /* ------------------------------------------------------------- collage
+     8 columns x 4 rows at 2:1 makes every cell square, so a slot's shape is
+     just its span: 3x2 is 3:2 landscape, 2x2 is square, 2x1 is a 2:1
+     panorama, 2x3 is portrait. That's what lets each slot be matched to the
+     photo that goes in it.
+
+     TO RESHAPE: redraw the map. Each letter is one photo (see the collage
+     array at the top of this file). Keep each letter's block rectangular and
+     keep the rows the same length; nothing else needs to change. */
+  .collage {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: clamp(0.45rem, 0.3rem + 0.6vw, 0.85rem);
+
+    aspect-ratio: 2 / 1;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    grid-template-areas:
+      'a a a b b b g g'
+      'a a a b b b g g'
+      'c c d d e e g g'
+      'c c d d e e f f';
+  }
+
+  .collage__item {
+    grid-area: var(--area);
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .collage__item :global(img) {
+    width: 100%;
+    height: 100%;
+    /* contain, not cover — the whole photo is always visible. The slots are
+       shaped to match, so there's very little empty space around any of them. */
+    object-fit: contain;
+    /* A photo narrower than its slot gets letterboxed. Left centred, the ones
+       across the top row would each float down by a different amount and the
+       top edge would look ragged — `--anchor: top` pins them to a common line.
+       Set per photo in the collage array. */
+    object-position: center var(--anchor, center);
+    display: block;
+    /* No border-radius here. With object-fit: contain the radius is applied to
+       the element box (the whole slot), not to the visible photo, so it only
+       shows on the images that happen to fill their slot exactly — which reads
+       as a couple of randomly rounded pictures. */
+    transition: transform 0.4s var(--ease);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .collage__item:hover :global(img) {
+      transform: scale(1.03);
+    }
+  }
+
+  /* Below the desktop layout there's no reason to force the photos into a
+     fixed mosaic — let each keep its own shape and flow in columns. */
+  @media (max-width: 1000px) {
+    .collage {
+      aspect-ratio: auto;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: none;
+      grid-template-areas: none;
+      align-items: start;
+    }
+    .collage__item {
+      grid-area: auto;
+    }
+    .collage__item :global(img) {
+      height: auto;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .collage {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* -------------------------------------------------------------- methods */
+  .methods {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .methods__tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.4rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .methods__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--ink-2);
+    font-family: var(--font-display);
+    font-weight: 570;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.15s var(--ease),
+      color 0.15s var(--ease),
+      border-color 0.15s var(--ease);
+  }
+  .methods__tab:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
+  .methods__tab[aria-selected='true'] {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--accent-ink);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .methods__tab-num {
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .methods__pref {
+    font-size: 0.68rem;
+    padding-inline: 0.5rem;
+  }
+
+  .methods__panel {
+    padding: clamp(1.35rem, 1rem + 1.6vw, 2.25rem);
+  }
+  .methods__panel:focus-visible {
+    outline-offset: -3px;
+  }
+  .methods__panel h3 {
+    font-size: var(--step-2);
+    margin-bottom: 0.75rem;
+  }
+  .methods__intro {
+    color: var(--ink-2);
+    max-width: var(--measure);
+    margin-bottom: 1.5rem;
+  }
+
+  .methods__steps {
+    counter-reset: step;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+    max-width: var(--measure);
+  }
+  .methods__steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 0.9rem;
+    align-items: baseline;
+    color: var(--ink-2);
+  }
+  .methods__steps li::before {
+    content: counter(step);
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 0.78rem;
+    font-weight: 620;
+    font-variant-numeric: tabular-nums;
+    translate: 0 0.2rem;
+  }
+
+  .methods__source {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .methods__source a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .methods__source :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  /* ------------------------------------------------------------ locations */
+  .locations__controls {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .locations__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 420px;
+  }
+  .locations__search :global(svg) {
+    position: absolute;
+    left: 0.85rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .locations__search input {
+    width: 100%;
+    padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    font-size: var(--step--1);
+  }
+  .locations__search input:focus-visible {
+    border-color: var(--accent);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .chip {
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    font-weight: 520;
+    cursor: pointer;
+    transition:
+      background-color 0.15s var(--ease),
+      color 0.15s var(--ease),
+      border-color 0.15s var(--ease);
+  }
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .chip.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .locations__count:empty {
+    display: none;
+  }
+
+  .locations__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  }
+
+  .location {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    justify-content: space-between;
+    padding: 1.1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    transition:
+      border-color 0.15s var(--ease),
+      box-shadow 0.15s var(--ease);
+  }
+  .location:hover {
+    border-color: color-mix(in oklab, var(--accent) 35%, var(--line));
+    box-shadow: var(--shadow-sm);
+  }
+  .location[hidden] {
+    display: none;
+  }
+
+  .location h3 {
+    font-size: var(--step-0);
+    font-weight: 620;
+    margin-bottom: 0.25rem;
+  }
+  .location__address {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+
+  .location__warn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    color: var(--brass-600);
+  }
+  :global(html[data-theme='dark']) .location__warn {
+    color: var(--brass-300);
+  }
+  .location__warn :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: none;
+    translate: 0 0.15rem;
+  }
+
+  .location__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .location__map {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--step--1);
+    font-weight: 550;
+    text-decoration: none;
+  }
+  .location__map:hover {
+    text-decoration: underline;
+  }
+  .location__map :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .locations__empty {
+    padding: 1.5rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    color: var(--ink-2);
+  }
+  .locations__empty button {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--accent-ink);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* -------------------------------------------------------------- sources */
+  .sources {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    max-width: 900px;
+  }
+  .sources li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--line-strong);
+  }
+  .sources a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-decoration: none;
+  }
+  .sources a:hover {
+    text-decoration: underline;
+  }
+  .sources :global(svg) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+
+  .flag-credit {
+    margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    max-width: var(--measure);
+  }
+</style>
+
+<script>
+  /* ----------------------------------------------------------- method tabs */
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-method-tab]'));
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-method-panel]'));
+
+  const selectTab = (index: number, focus = true) => {
+    tabs.forEach((tab, i) => {
+      const active = i === index;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      panels[i]!.hidden = !active;
+    });
+    if (focus) tabs[index]!.focus();
+  };
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectTab(i, false));
+    tab.addEventListener('keydown', (event) => {
+      const keys: Record<string, number> = {
+        ArrowRight: i + 1,
+        ArrowLeft: i - 1,
+        Home: 0,
+        End: tabs.length - 1,
+      };
+      const next = keys[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      selectTab((next + tabs.length) % tabs.length);
+    });
+  });
+
+  /* ------------------------------------------------------ location filters */
+  const items = Array.from(document.querySelectorAll<HTMLElement>('[data-loc-item]'));
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-loc-filter]'));
+  const search = document.querySelector<HTMLInputElement>('[data-loc-search]');
+  const countEl = document.querySelector<HTMLElement>('[data-loc-count]');
+  const emptyEl = document.querySelector<HTMLElement>('[data-loc-empty]');
+  const resetBtn = document.querySelector<HTMLButtonElement>('[data-loc-reset]');
+
+  let activeCategory = 'all';
+
+  const apply = () => {
+    const query = (search?.value ?? '').trim().toLowerCase();
+    let shown = 0;
+
+    for (const item of items) {
+      const categoryHit = activeCategory === 'all' || item.dataset.category === activeCategory;
+      const textHit = query === '' || (item.dataset.haystack ?? '').includes(query);
+      const hit = categoryHit && textHit;
+      item.hidden = !hit;
+      if (hit) shown += 1;
+    }
+
+    if (countEl) {
+      countEl.textContent =
+        shown === items.length
+          ? `${items.length} locations`
+          : `${shown} of ${items.length} locations`;
+    }
+    if (emptyEl) emptyEl.hidden = shown > 0;
+  };
+
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      activeCategory = chip.dataset.locFilter!;
+      chips.forEach((other) => {
+        const active = other === chip;
+        other.classList.toggle('is-active', active);
+        other.setAttribute('aria-pressed', String(active));
+      });
+      apply();
+    });
+  });
+
+  let frame = 0;
+  search?.addEventListener('input', () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(apply);
+  });
+
+  resetBtn?.addEventListener('click', () => {
+    if (search) search.value = '';
+    chips[0]?.click();
+  });
+
+  apply();
+</script>

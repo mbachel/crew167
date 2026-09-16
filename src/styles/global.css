@@ -1,0 +1,772 @@
+/* ==========================================================================
+   Crew 167 — design tokens + base styles
+   Deep forest green (Venturing) + warm brass, on warm paper.
+   Light and dark are both first-class; `data-theme` on <html> wins over the OS.
+   ========================================================================== */
+
+:root {
+  /* ---- brand ramp ------------------------------------------------------ */
+  --green-950: #05130d;
+  --green-900: #0a2419;
+  --green-800: #0f3324;
+  --green-700: #14472f;
+  --green-600: #1a5c3c;
+  --green-500: #22764c;
+  --green-400: #35986a;
+  --green-300: #63b891;
+  --green-200: #a2d6bd;
+  --green-100: #d5ece1;
+  --green-50: #eef7f2;
+
+  --brass-600: #9a6a12;
+  --brass-500: #c08a1e;
+  --brass-400: #dda92f;
+  --brass-300: #edc45f;
+  --brass-100: #f8e7b8;
+
+  --clay-500: #b4553a;
+
+  /* ---- semantic (light) ------------------------------------------------ */
+  --bg: #fbfaf7;
+  --bg-sunken: #f3f1ea;
+  --surface: #ffffff;
+  --surface-2: #f8f7f3;
+  --ink: #14201a;
+  --ink-2: #3d4a44;
+  --ink-3: #667069;
+  --line: #e3e0d7;
+  --line-strong: #cfcbbf;
+  --accent: var(--green-600);
+  --accent-ink: var(--green-700);
+  --accent-soft: var(--green-50);
+  --highlight: var(--brass-500);
+  --highlight-soft: #fdf6e4;
+  --on-accent: #ffffff;
+
+  --shadow-sm: 0 1px 2px rgb(12 32 22 / 0.06), 0 1px 3px rgb(12 32 22 / 0.05);
+  --shadow-md: 0 4px 12px rgb(12 32 22 / 0.07), 0 2px 4px rgb(12 32 22 / 0.04);
+  --shadow-lg: 0 18px 40px -12px rgb(12 32 22 / 0.18), 0 4px 12px rgb(12 32 22 / 0.06);
+
+  /* ---- dark green bands ------------------------------------------------
+     Shared by the hero, interior page headers, the join band and the footer.
+     White text sits on all of these, so both themes stay dark — the dark
+     theme just goes deeper, and the contour lines soften to match. */
+  --band-base: var(--green-900);
+  --band-deep: var(--green-950);
+  --band-glow-1: var(--green-600);
+  --band-glow-2: var(--green-700);
+  --topo-opacity: 0.16;
+
+  /* ---- type ------------------------------------------------------------ */
+  --font-display: 'Outfit Variable', 'Outfit', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --font-body: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'Cascadia Mono', Menlo, monospace;
+
+  /* fluid scale — min at 360px, max at 1280px */
+  --step--1: clamp(0.83rem, 0.8rem + 0.13vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.18vw, 1.09rem);
+  --step-1: clamp(1.2rem, 1.13rem + 0.32vw, 1.42rem);
+  --step-2: clamp(1.44rem, 1.31rem + 0.57vw, 1.85rem);
+  --step-3: clamp(1.73rem, 1.51rem + 0.95vw, 2.4rem);
+  --step-4: clamp(2.07rem, 1.72rem + 1.53vw, 3.13rem);
+  --step-5: clamp(2.49rem, 1.94rem + 2.38vw, 4.07rem);
+
+  /* ---- space / shape --------------------------------------------------- */
+  --gutter: clamp(1.15rem, 0.85rem + 1.5vw, 2.25rem);
+  --measure: 68ch;
+  --wide: 1180px;
+  --narrow: 780px;
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+  --header-h: 88px;
+  --ease: cubic-bezier(0.22, 0.75, 0.28, 1);
+}
+
+/* The emblem needs real room to read; give the bar a little less on phones. */
+@media (max-width: 600px) {
+  :root {
+    --header-h: 74px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0b1310;
+    --bg-sunken: #070f0c;
+    --surface: #121d18;
+    --surface-2: #17251f;
+    --ink: #e9efeb;
+    --ink-2: #b3c1ba;
+    --ink-3: #86948d;
+    --line: #223129;
+    --line-strong: #32453b;
+    --accent: var(--green-300);
+    --accent-ink: var(--green-200);
+    --accent-soft: #10261c;
+    --highlight: var(--brass-300);
+    --highlight-soft: #241c09;
+    --on-accent: #04140d;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.45);
+    --shadow-lg: 0 18px 40px -12px rgb(0 0 0 / 0.6);
+
+    --band-base: var(--green-950);
+    --band-deep: #020806;
+    --band-glow-1: var(--green-800);
+    --band-glow-2: var(--green-900);
+    --topo-opacity: 0.11;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b1310;
+  --bg-sunken: #070f0c;
+  --surface: #121d18;
+  --surface-2: #17251f;
+  --ink: #e9efeb;
+  --ink-2: #b3c1ba;
+  --ink-3: #86948d;
+  --line: #223129;
+  --line-strong: #32453b;
+  --accent: var(--green-300);
+  --accent-ink: var(--green-200);
+  --accent-soft: #10261c;
+  --highlight: var(--brass-300);
+  --highlight-soft: #241c09;
+  --on-accent: #04140d;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 18px 40px -12px rgb(0 0 0 / 0.6);
+
+  --band-base: var(--green-950);
+  --band-deep: #020806;
+  --band-glow-1: var(--green-800);
+  --band-glow-2: var(--green-900);
+  --topo-opacity: 0.11;
+}
+
+/* ==========================================================================
+   Reset / base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 1.25rem);
+  color-scheme: light;
+  /* Always reserve the scrollbar track. Without this, moving from a long page
+     to a short one changes the content width and everything shifts sideways. */
+  scrollbar-gutter: stable;
+  /* Painted before <body> exists, so navigations don't flash the browser's
+     default canvas — very visible in dark mode. */
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) {
+    color-scheme: dark;
+  }
+}
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.65;
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.021em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+h1 {
+  font-size: var(--step-5);
+}
+h2 {
+  font-size: var(--step-3);
+}
+h3 {
+  font-size: var(--step-1);
+}
+h4 {
+  font-size: var(--step-0);
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--accent-ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: color 0.15s var(--ease);
+}
+a:hover {
+  color: var(--highlight);
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--highlight);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin-block: 2.5rem;
+}
+
+::selection {
+  background: var(--green-200);
+  color: var(--green-900);
+}
+
+/* ==========================================================================
+   Layout primitives
+   ========================================================================== */
+
+.wrap {
+  width: min(100% - (var(--gutter) * 2), var(--wide));
+  margin-inline: auto;
+}
+
+.wrap--narrow {
+  width: min(100% - (var(--gutter) * 2), var(--narrow));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: clamp(3rem, 2rem + 4.5vw, 6rem);
+}
+
+.section--tight {
+  padding-block: clamp(2rem, 1.4rem + 2.8vw, 3.75rem);
+}
+
+.section--sunken {
+  background: var(--bg-sunken);
+}
+
+.stack > * + * {
+  margin-top: var(--stack-gap, 1.1rem);
+}
+
+.grid {
+  display: grid;
+  gap: clamp(1rem, 0.7rem + 1.2vw, 1.75rem);
+}
+
+.grid--2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+.grid--3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+}
+
+.center {
+  text-align: center;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  z-index: 200;
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 0.7rem 1.25rem;
+  border-radius: 0 0 var(--radius) var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus-visible {
+  transform: translate(-50%, 0);
+  color: var(--on-accent);
+}
+
+/* ==========================================================================
+   Type helpers
+   ========================================================================== */
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: 620;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 1.7rem;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  flex: none;
+}
+
+.eyebrow--center {
+  justify-content: center;
+}
+
+.lede {
+  font-size: var(--step-1);
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 60ch;
+}
+
+.section-head {
+  max-width: var(--measure);
+  margin-bottom: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+}
+.section-head > * + * {
+  margin-top: 0.75rem;
+}
+.section-head--center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* Long-form markdown (by-laws, flag retirement, etc.) */
+.prose {
+  max-width: var(--measure);
+  color: var(--ink-2);
+}
+.prose > * + * {
+  margin-top: 1.15em;
+}
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: var(--ink);
+  margin-top: 2em;
+  margin-bottom: -0.35em;
+}
+.prose h3 {
+  font-size: var(--step-1);
+}
+.prose h4 {
+  font-size: var(--step-0);
+  font-weight: 640;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.35em;
+}
+.prose li + li {
+  margin-top: 0.45em;
+}
+.prose li::marker {
+  color: var(--accent);
+}
+.prose ol > li::marker {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.prose strong {
+  color: var(--ink);
+  font-weight: 640;
+}
+.prose a {
+  text-decoration-color: color-mix(in oklab, var(--accent) 45%, transparent);
+}
+.prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.35em 0 0.35em 1.15em;
+  color: var(--ink-2);
+  font-style: italic;
+}
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.1em 0.35em;
+}
+.prose--wide {
+  max-width: none;
+}
+
+/* Legal outline numbering, matching the by-laws document exactly:
+   the article number comes from the heading, then a. / b. / c.,
+   then i. / ii. / iii., then 1. / 2. / 3. */
+.prose--legal ol {
+  list-style-type: lower-alpha;
+}
+.prose--legal ol ol {
+  list-style-type: lower-roman;
+}
+.prose--legal ol ol ol {
+  list-style-type: decimal;
+}
+.prose--legal ol ol {
+  margin-top: 0.55em;
+}
+.prose--legal li + li {
+  margin-top: 0.55em;
+}
+.prose--legal li::marker {
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.btn {
+  --btn-bg: var(--accent);
+  --btn-fg: var(--on-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.8rem 1.45rem;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--step-0);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.16s var(--ease),
+    box-shadow 0.16s var(--ease),
+    background-color 0.16s var(--ease),
+    border-color 0.16s var(--ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:hover {
+  color: var(--btn-fg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn--ghost {
+  --btn-bg: transparent;
+  --btn-fg: var(--ink);
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+.btn--ghost:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.btn--on-dark {
+  --btn-bg: rgb(255 255 255 / 0.09);
+  --btn-fg: #fff;
+  border-color: rgb(255 255 255 / 0.28);
+  backdrop-filter: blur(6px);
+}
+.btn--on-dark:hover {
+  --btn-bg: rgb(255 255 255 / 0.16);
+  border-color: rgb(255 255 255 / 0.5);
+}
+
+.btn--brass {
+  --btn-bg: var(--brass-400);
+  --btn-fg: #2a1c02;
+}
+.btn--brass:hover {
+  --btn-bg: var(--brass-300);
+}
+
+.btn--sm {
+  padding: 0.5rem 1rem;
+  font-size: var(--step--1);
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Cards & surfaces
+   ========================================================================== */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 1rem + 0.8vw, 1.85rem);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+
+.card--link:hover,
+.card--link:focus-within {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
+}
+
+.card h3 {
+  margin-bottom: 0.5rem;
+}
+.card p {
+  color: var(--ink-2);
+}
+
+.card__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.card__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border: 1px solid color-mix(in oklab, var(--accent) 22%, transparent);
+  font-size: var(--step--1);
+  font-weight: 550;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.tag--brass {
+  background: var(--highlight-soft);
+  color: var(--brass-600);
+  border-color: color-mix(in oklab, var(--brass-500) 30%, transparent);
+}
+:root[data-theme='dark'] .tag--brass,
+:root:not([data-theme='light']) .tag--brass {
+  color: var(--brass-300);
+}
+
+/* Definition-style info rows (meeting details, contact) */
+.deflist {
+  display: grid;
+  gap: 1rem;
+}
+.deflist__row {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+.deflist__icon {
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.deflist__icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.deflist dt {
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.deflist dd {
+  margin: 0;
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   Scroll reveal — opt-in, and a no-op when JS is off or motion is reduced
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.6s var(--ease),
+      transform 0.6s var(--ease);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  html.js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Anything already on screen when the page loads is shown immediately, with
+     no transition — otherwise every navigation replays the animation and the
+     whole page appears to flash and settle. Only content below the fold
+     animates, on scroll, which is the point of the effect. */
+  html.js.reveal-init [data-reveal] {
+    transition: none !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+.muted {
+  color: var(--ink-3);
+}
+.small {
+  font-size: var(--step--1);
+}
+.nowrap {
+  white-space: nowrap;
+}
+.mt-0 {
+  margin-top: 0;
+}
+
+.divider-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+  border: 0;
+  margin-block: 0;
+}
+
+/* Topographic contour texture behind the dark bands.
+   Artwork: public/topo-map.webp — real USGS contour data for Crowders Mountain
+   and The Pinnacle, about 25 miles west of Charlotte. Public domain.
+
+   The file is white lines on black, and `screen` drops the black out, so only
+   the contours show. Every band sets `isolation: isolate`, which keeps the
+   blend inside that band. Wrapped in @supports so browsers without blend modes
+   get nothing rather than a grey slab. */
+.topo-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@supports (mix-blend-mode: screen) {
+  .topo-bg {
+    background-image: url('/topo-map.webp');
+    background-size: cover;
+    /* Anchored to the TOP of the band, not centred. Bands differ in height —
+       a tall hero vs a short page header — and centring makes each one show a
+       different slice of the map, so the terrain appeared to jump every time
+       you changed page. Anchoring the top means a short band shows exactly the
+       same region as the top of a tall one. */
+    background-position: center top;
+    background-repeat: no-repeat;
+    mix-blend-mode: screen;
+    opacity: var(--topo-opacity);
+  }
+}

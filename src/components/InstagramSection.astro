@@ -1,0 +1,288 @@
+---
+import { CONTACT, INTEGRATIONS } from '../config';
+import { getInstagramPosts, shortCaption } from '../lib/instagram';
+import Icon from './Icon.astro';
+
+/**
+ * Three ways to render this section, in priority order:
+ *   1. INSTAGRAM_TOKEN set  -> real posts, fetched at build, plain <img> grid
+ *   2. instagramEmbedUrl set -> third-party iframe, lazy-loaded on scroll
+ *   3. neither               -> follow card
+ * See src/config.ts and SETUP.md.
+ */
+const posts = await getInstagramPosts(INTEGRATIONS.instagramPostCount);
+const embedUrl = INTEGRATIONS.instagramEmbedUrl;
+
+const mode: 'posts' | 'embed' | 'card' =
+  posts.length > 0 ? 'posts' : embedUrl ? 'embed' : 'card';
+---
+
+{/* Plain (not sunken) so it reads as its own block between the sunken
+    "what we get up to" section above and the dark join band below. */}
+<section class="section" id="instagram">
+  <div class="wrap">
+    <div class="section-head section-head--center" data-reveal>
+      <p class="eyebrow eyebrow--center">From the crew</p>
+      <h2>Follow along on Instagram</h2>
+      <p class="lede" style="margin-inline:auto">
+        The Crew Car goes everywhere its keeper goes, and it gets photographed at all of it.
+      </p>
+    </div>
+
+    {
+      mode === 'posts' && (
+        <ul class="ig-grid" data-reveal>
+          {posts.map((post) => (
+            <li class="ig-grid__item">
+              <a href={post.permalink} rel="noopener" class="ig-tile">
+                <img
+                  src={post.imageUrl}
+                  alt={shortCaption(post.caption) ?? 'Crew 167 Instagram post'}
+                  loading="lazy"
+                  decoding="async"
+                  width="400"
+                  height="400"
+                />
+                {post.isVideo && (
+                  <span class="ig-tile__badge" aria-label="Video">
+                    ▶
+                  </span>
+                )}
+                {shortCaption(post.caption) && (
+                  <span class="ig-tile__caption">{shortCaption(post.caption)}</span>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      mode === 'embed' && (
+        <div class="ig-embed" data-ig-embed data-src={embedUrl} data-reveal>
+          <div class="ig-embed__placeholder">
+            <Icon name="instagram" />
+            <p class="small muted">Loading the feed…</p>
+            <noscript>
+              <a class="btn btn--sm" href={CONTACT.instagramUrl} rel="noopener">
+                View @{CONTACT.instagramHandle} on Instagram
+              </a>
+            </noscript>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      mode === 'card' && (
+        <div class="ig-card" data-reveal>
+          <div class="ig-card__mark" aria-hidden="true">
+            <Icon name="instagram" />
+          </div>
+          <div class="ig-card__body">
+            <h3>@{CONTACT.instagramHandle}</h3>
+            <p>
+              Trip photos, service days, and wherever the Crew Car turned up this week. It's the
+              fastest way to see what the crew is actually doing.
+            </p>
+          </div>
+          <a class="btn" href={CONTACT.instagramUrl} rel="noopener">
+            Follow the crew
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      )
+    }
+
+    <p class="ig-foot small muted center">
+      <a href={CONTACT.instagramUrl} rel="noopener">
+        See everything on Instagram
+        <Icon name="external" />
+      </a>
+    </p>
+  </div>
+</section>
+
+<style>
+  /* ---- real posts ---- */
+  .ig-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    gap: clamp(0.6rem, 0.4rem + 0.8vw, 1rem);
+  }
+
+  .ig-tile {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    box-shadow: var(--shadow-sm);
+  }
+  .ig-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s var(--ease);
+  }
+  .ig-tile:hover img {
+    transform: scale(1.05);
+  }
+
+  .ig-tile__badge {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.6rem;
+    font-size: 0.7rem;
+    color: #fff;
+    background: rgb(0 0 0 / 0.5);
+    border-radius: var(--radius-pill);
+    padding: 0.12rem 0.45rem;
+    backdrop-filter: blur(4px);
+  }
+
+  .ig-tile__caption {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 2.5rem 0.75rem 0.7rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: #fff;
+    background: linear-gradient(transparent, rgb(0 0 0 / 0.75));
+    opacity: 0;
+    transition: opacity 0.25s var(--ease);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .ig-tile:hover .ig-tile__caption,
+  .ig-tile:focus-visible .ig-tile__caption {
+    opacity: 1;
+  }
+
+  /* ---- third-party embed ---- */
+  .ig-embed {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    overflow: hidden;
+    min-height: 420px;
+    box-shadow: var(--shadow-sm);
+  }
+  .ig-embed :global(iframe) {
+    display: block;
+    width: 100%;
+    min-height: 420px;
+    border: 0;
+  }
+  .ig-embed__placeholder {
+    min-height: 420px;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    color: var(--ink-3);
+  }
+  .ig-embed__placeholder :global(svg) {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  /* ---- follow card ---- */
+  .ig-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(1rem, 0.7rem + 1.4vw, 1.75rem);
+    padding: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(120% 140% at 0% 0%, var(--accent-soft), transparent 55%), var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .ig-card__mark {
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius);
+    color: #fff;
+    background: linear-gradient(135deg, #f9a03f, #d6336c 45%, #7b3fe4);
+  }
+  .ig-card__mark :global(svg) {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  .ig-card__body {
+    flex: 1 1 22ch;
+  }
+  .ig-card__body h3 {
+    margin-bottom: 0.3rem;
+  }
+  .ig-card__body p {
+    color: var(--ink-2);
+    max-width: 52ch;
+  }
+
+  .ig-foot {
+    margin-top: 1.5rem;
+  }
+  .ig-foot a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-decoration: none;
+    font-weight: 550;
+  }
+  .ig-foot a:hover {
+    text-decoration: underline;
+  }
+  .ig-foot :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+</style>
+
+<script>
+  /**
+   * Only load a third-party feed iframe once it's about to be seen. A slow or
+   * broken widget then can't affect the rest of the page.
+   */
+  const host = document.querySelector<HTMLElement>('[data-ig-embed]');
+  const src = host?.dataset.src;
+
+  if (host && src) {
+    const mount = () => {
+      const frame = document.createElement('iframe');
+      frame.src = src;
+      frame.loading = 'lazy';
+      frame.title = 'Crew 167 on Instagram';
+      frame.setAttribute('scrolling', 'no');
+      frame.setAttribute('frameborder', '0');
+      host.replaceChildren(frame);
+    };
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          io.disconnect();
+          mount();
+        },
+        { rootMargin: '300px 0px' },
+      );
+      io.observe(host);
+    } else {
+      mount();
+    }
+  }
+</script>

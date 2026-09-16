@@ -1,0 +1,279 @@
+---
+/**
+ * Click-to-zoom viewer for the gallery.
+ *
+ * Drop this component on a page, then mark each photo link with
+ * `data-lightbox` and (optionally) `data-caption`. Every such link on the page
+ * becomes one entry in the viewer. Works as plain links with JS disabled.
+ */
+---
+
+<dialog class="lightbox" data-lightbox-dialog aria-label="Photo viewer">
+  <div class="lightbox__stage">
+    <img class="lightbox__img" data-lightbox-img alt="" />
+  </div>
+
+  <div class="lightbox__bar">
+    <p class="lightbox__caption" data-lightbox-caption></p>
+    <p class="lightbox__count" data-lightbox-count></p>
+  </div>
+
+  <button class="lightbox__btn lightbox__btn--close" data-lightbox-close aria-label="Close viewer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18"></path>
+    </svg>
+  </button>
+
+  <button class="lightbox__btn lightbox__btn--prev" data-lightbox-prev aria-label="Previous photo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m14.5 5-7 7 7 7"></path>
+    </svg>
+  </button>
+
+  <button class="lightbox__btn lightbox__btn--next" data-lightbox-next aria-label="Next photo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m9.5 5 7 7-7 7"></path>
+    </svg>
+  </button>
+</dialog>
+
+<style>
+  .lightbox {
+    /* Fill the viewport without using 100vw, which overshoots by the width of
+       the scrollbar and produces a horizontal scroll on desktop. */
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .lightbox::backdrop {
+    background: rgb(6 14 10 / 0.93);
+    backdrop-filter: blur(3px);
+  }
+
+  .lightbox[open] {
+    display: grid;
+    grid-template-rows: 1fr auto;
+  }
+
+  .lightbox__stage {
+    display: grid;
+    place-items: center;
+    padding: clamp(2.75rem, 5vw, 4rem) clamp(0.75rem, 4vw, 5rem) 0.5rem;
+    min-height: 0;
+  }
+
+  .lightbox__img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.7);
+    animation: lb-in 0.28s cubic-bezier(0.22, 0.75, 0.28, 1);
+  }
+
+  @keyframes lb-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+
+  .lightbox__bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0.85rem clamp(1rem, 4vw, 2.5rem) clamp(1rem, 3vw, 1.75rem);
+    color: rgb(255 255 255 / 0.75);
+    font-size: var(--step--1);
+  }
+
+  .lightbox__caption {
+    margin: 0;
+    max-width: 70ch;
+    line-height: 1.5;
+  }
+
+  .lightbox__count {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .lightbox__btn {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 50%;
+    border: 1px solid rgb(255 255 255 / 0.2);
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition:
+      background-color 0.15s var(--ease),
+      transform 0.15s var(--ease),
+      opacity 0.15s var(--ease);
+  }
+  .lightbox__btn:hover {
+    background: rgb(255 255 255 / 0.2);
+  }
+  .lightbox__btn:active {
+    transform: scale(0.94);
+  }
+  .lightbox__btn svg {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+  .lightbox__btn[disabled] {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  .lightbox__btn--close {
+    top: clamp(0.75rem, 2vw, 1.25rem);
+    right: clamp(0.75rem, 2vw, 1.25rem);
+  }
+  .lightbox__btn--prev {
+    left: clamp(0.5rem, 2vw, 1.5rem);
+    top: 50%;
+    translate: 0 -50%;
+  }
+  .lightbox__btn--next {
+    right: clamp(0.5rem, 2vw, 1.5rem);
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  @media (max-width: 600px) {
+    .lightbox__btn--prev {
+      left: 0.4rem;
+    }
+    .lightbox__btn--next {
+      right: 0.4rem;
+    }
+    .lightbox__btn {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+</style>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox-dialog]');
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[data-lightbox]'));
+
+  if (dialog && links.length > 0) {
+    const img = dialog.querySelector<HTMLImageElement>('[data-lightbox-img]')!;
+    const captionEl = dialog.querySelector<HTMLElement>('[data-lightbox-caption]')!;
+    const countEl = dialog.querySelector<HTMLElement>('[data-lightbox-count]')!;
+    const prevBtn = dialog.querySelector<HTMLButtonElement>('[data-lightbox-prev]')!;
+    const nextBtn = dialog.querySelector<HTMLButtonElement>('[data-lightbox-next]')!;
+    const closeBtn = dialog.querySelector<HTMLButtonElement>('[data-lightbox-close]')!;
+
+    let index = 0;
+    let opener: HTMLAnchorElement | null = null;
+
+    const show = (next: number) => {
+      index = (next + links.length) % links.length;
+      const link = links[index]!;
+      img.src = link.href;
+      img.alt = link.dataset.alt ?? '';
+      const caption = link.dataset.caption ?? '';
+      captionEl.textContent = caption;
+      captionEl.hidden = caption === '';
+      countEl.textContent = `${index + 1} / ${links.length}`;
+
+      // Warm the neighbours so paging feels instant.
+      for (const offset of [1, -1]) {
+        const neighbour = links[(index + offset + links.length) % links.length];
+        if (neighbour) new Image().src = neighbour.href;
+      }
+    };
+
+    const open = (i: number, from: HTMLAnchorElement) => {
+      opener = from;
+      show(i);
+      dialog.showModal();
+    };
+
+    links.forEach((link, i) => {
+      link.addEventListener('click', (event) => {
+        // Let modified clicks (new tab, save-as) behave normally.
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+        event.preventDefault();
+        open(i, link);
+      });
+    });
+
+    const single = links.length < 2;
+    prevBtn.disabled = single;
+    nextBtn.disabled = single;
+
+    prevBtn.addEventListener('click', () => show(index - 1));
+    nextBtn.addEventListener('click', () => show(index + 1));
+    closeBtn.addEventListener('click', () => dialog.close());
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        show(index + 1);
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        show(index - 1);
+      }
+    });
+
+    // Click the backdrop (anywhere that isn't the photo or a button) to close.
+    dialog.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (target === img || target.closest('button')) return;
+      dialog.close();
+    });
+
+    // Return focus to the thumbnail that was clicked.
+    dialog.addEventListener('close', () => {
+      opener?.focus();
+      img.removeAttribute('src');
+    });
+
+    // Swipe on touch devices.
+    let startX = 0;
+    let startY = 0;
+    dialog.addEventListener(
+      'touchstart',
+      (event) => {
+        startX = event.changedTouches[0]!.clientX;
+        startY = event.changedTouches[0]!.clientY;
+      },
+      { passive: true },
+    );
+    dialog.addEventListener(
+      'touchend',
+      (event) => {
+        const dx = event.changedTouches[0]!.clientX - startX;
+        const dy = event.changedTouches[0]!.clientY - startY;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          show(dx < 0 ? index + 1 : index - 1);
+        } else if (dy > 90 && Math.abs(dy) > Math.abs(dx)) {
+          dialog.close();
+        }
+      },
+      { passive: true },
+    );
+  }
+</script>

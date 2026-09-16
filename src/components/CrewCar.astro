@@ -1,0 +1,255 @@
+---
+/**
+ * The Crew Car — the homepage's one bit of pure fun.
+ *
+ * Click it and it drives the length of the trail and back. That's the whole
+ * feature. It's a CSS transform animation on a single element, so it stays on
+ * the compositor and costs nothing; with reduced-motion on it just hops.
+ */
+---
+
+<div class="crewcar" data-crewcar>
+  <svg class="crewcar__scene" viewBox="0 0 440 260" role="presentation" aria-hidden="true">
+    <defs>
+      <linearGradient id="cc-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--cc-sky-1)"></stop>
+        <stop offset="100%" stop-color="var(--cc-sky-2)"></stop>
+      </linearGradient>
+    </defs>
+
+    <rect width="440" height="260" rx="22" fill="url(#cc-sky)"></rect>
+
+    <!-- ridgelines -->
+    <path d="M0 176 78 112l52 40 46-30 62 48 60-38 76 56 66-34v122H0Z" fill="var(--cc-hill-far)"
+    ></path>
+    <path d="M0 208 66 160l60 34 54-24 74 44 72-32 68 40 46-22v72H0Z" fill="var(--cc-hill-near)"
+    ></path>
+
+    <!-- the trail -->
+    <path
+      d="M12 224h416"
+      stroke="var(--cc-trail)"
+      stroke-width="4"
+      stroke-linecap="round"
+      stroke-dasharray="16 13"></path>
+  </svg>
+
+  <button class="crewcar__btn" type="button" data-crewcar-btn aria-label="Push the Crew Car">
+    {/* Drawn from the crew's own photo of the real car: a worn lime rally
+        coupe — long hood, fastback roof, rear lip spoiler, blue side decals,
+        scuffed paint, black spoked wheels. */}
+    <svg class="crewcar__car" viewBox="0 0 120 52" aria-hidden="true">
+      <!-- rear lip spoiler -->
+      <path d="M5 29.4 17.5 27 17.5 29.2 5.4 31.3Z" fill="#9aa032"></path>
+
+      <!-- body -->
+      <path
+        d="M5.6 41V32Q5.6 29.4 8.8 28.9L28 25.9 45.5 15Q47 14 49.6 14L63 14Q65.6 14 67.1 15.7L78 26.5 104 28.9Q112.2 29.9 114.7 34.4L115.6 37.4Q116.3 41 112.5 41Z"
+        fill="#c7cc44"></path>
+
+      <!-- lower shadow along the rocker -->
+      <path d="M5.6 37.6 115.9 38.6 116 39.6Q116 41 112.5 41L5.6 41Z" fill="#969b30"></path>
+
+      <!-- glass -->
+      <path
+        d="M31.4 25.4 46.9 16.4Q48 15.9 49.7 15.9L62.7 15.9Q64.5 15.9 65.5 17.1L74.2 26.2Z"
+        fill="#2c3b46"></path>
+      <path d="M34.5 24.9 47.6 17.3 51.5 17.3 39.6 24.9Z" fill="#5c7686" opacity=".55"></path>
+      <!-- B-pillar -->
+      <path d="M52.6 15.9 55.9 15.9 55.9 26.2 52.6 26.2Z" fill="#c7cc44"></path>
+
+      <!-- blue side decals -->
+      <path d="M33 31.4 59 30.4 59 32.7 33 33.8Z" fill="#4a6d8c" opacity=".85"></path>
+      <path d="M62 30.3 74 29.9 71.4 32.4 62 32.6Z" fill="#4a6d8c" opacity=".7"></path>
+      <path d="M20 29.6 28.6 28.7 27 31.2 20 31.6Z" fill="#4a6d8c" opacity=".6"></path>
+
+      <!-- paint wear -->
+      <path d="M84 30.2 96 31 96 32.1 84 31.5Z" fill="#e3e688" opacity=".75"></path>
+      <path d="M42 27.6 53 27.2 53 28.2 42 28.6Z" fill="#e3e688" opacity=".6"></path>
+      <path d="M9.5 33.5 15 33.2 15 34.2 9.5 34.6Z" fill="#8d9330" opacity=".8"></path>
+
+      <!-- lights -->
+      <path d="M105 30.4 113.2 32.6 112.6 34.8 105 33.6Z" fill="#f6f3d2" opacity=".9"></path>
+      <path d="M6.2 31.6 11.4 31 11.4 33.9 6.2 34.4Z" fill="#b4553a"></path>
+
+      <!-- door seam -->
+      <path d="M60.6 27.2 60.6 37.4" stroke="#9aa032" stroke-width="1" opacity=".7"></path>
+
+      <!-- wheels -->
+      {/* Tyre, dark spoked rim, hub. Drawn as concentric rings — individual
+          spokes just smear into a blob at the size this actually renders. */}
+      <g fill="#1b1f24">
+        <circle cx="26" cy="40" r="8.6"></circle>
+        <circle cx="95" cy="40" r="8.6"></circle>
+      </g>
+      <g fill="#39434b">
+        <circle cx="26" cy="40" r="5"></circle>
+        <circle cx="95" cy="40" r="5"></circle>
+      </g>
+      <g fill="#8e9aa2">
+        <circle cx="26" cy="40" r="2"></circle>
+        <circle cx="95" cy="40" r="2"></circle>
+      </g>
+    </svg>
+  </button>
+
+  <p class="crewcar__counter small muted" data-crewcar-count hidden></p>
+</div>
+
+<style>
+  .crewcar {
+    --cc-sky-1: #dff0e7;
+    --cc-sky-2: #f4f7f2;
+    --cc-hill-far: #a9d2bd;
+    --cc-hill-near: #4e9a76;
+    --cc-trail: #ffffff;
+
+    position: relative;
+    isolation: isolate;
+  }
+
+  :global(html[data-theme='dark']) .crewcar,
+  :global(html:not([data-theme='light'])) .crewcar {
+    --cc-sky-1: #10281e;
+    --cc-sky-2: #0a1a14;
+    --cc-hill-far: #174432;
+    --cc-hill-near: #1e6144;
+    --cc-trail: rgb(255 255 255 / 0.45);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :global(html:not([data-theme='dark'])) .crewcar {
+      --cc-sky-1: #dff0e7;
+      --cc-sky-2: #f4f7f2;
+      --cc-hill-far: #a9d2bd;
+      --cc-hill-near: #4e9a76;
+      --cc-trail: #ffffff;
+    }
+  }
+
+  .crewcar__scene {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+  }
+
+  .crewcar__btn {
+    position: absolute;
+    left: 4%;
+    bottom: 11.5%;
+    width: 23%;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    line-height: 0;
+    transform: translateX(var(--cc-x, 0));
+    transition: transform 0.2s var(--ease);
+  }
+
+  .crewcar__car {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 3px 5px rgb(6 30 20 / 0.35));
+    transition: transform 0.2s var(--ease);
+  }
+
+  .crewcar__btn:hover .crewcar__car {
+    transform: translateY(-3px);
+  }
+
+  /* One lap: out to the far end of the trail, pause, and back. */
+  .crewcar[data-driving='true'] .crewcar__btn {
+    animation: cc-drive 2.6s cubic-bezier(0.5, 0, 0.5, 1) forwards;
+    pointer-events: none;
+  }
+  .crewcar[data-driving='true'] .crewcar__car {
+    animation: cc-bounce 0.32s ease-in-out infinite;
+  }
+
+  @keyframes cc-drive {
+    0% {
+      transform: translateX(0) scaleX(1);
+    }
+    42% {
+      transform: translateX(300%) scaleX(1);
+    }
+    50% {
+      transform: translateX(300%) scaleX(-1);
+    }
+    92%,
+    100% {
+      transform: translateX(0) scaleX(-1);
+    }
+  }
+
+  @keyframes cc-bounce {
+    50% {
+      translate: 0 -2.5%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .crewcar[data-driving='true'] .crewcar__btn {
+      animation: none;
+    }
+    .crewcar[data-driving='true'] .crewcar__car {
+      animation: none;
+    }
+  }
+
+  .crewcar__counter {
+    position: absolute;
+    right: 4%;
+    top: 6%;
+    margin: 0;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklab, var(--surface) 80%, transparent);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(4px);
+  }
+</style>
+
+<script>
+  const scene = document.querySelector<HTMLElement>('[data-crewcar]');
+  const button = document.querySelector<HTMLButtonElement>('[data-crewcar-btn]');
+  const counter = document.querySelector<HTMLElement>('[data-crewcar-count]');
+
+  if (scene && button) {
+    const KEY = 'crew167-car-laps';
+    let laps = 0;
+    try {
+      laps = Number(localStorage.getItem(KEY) ?? 0) || 0;
+    } catch {
+      /* storage blocked — the counter just starts at zero each visit */
+    }
+
+    const paint = () => {
+      if (!counter || laps < 1) return;
+      counter.hidden = false;
+      counter.textContent = laps === 1 ? '1 lap' : `${laps} laps`;
+    };
+    paint();
+
+    button.addEventListener('click', () => {
+      if (scene.dataset.driving === 'true') return;
+      scene.dataset.driving = 'true';
+      laps += 1;
+      try {
+        localStorage.setItem(KEY, String(laps));
+      } catch {
+        /* ignore */
+      }
+      paint();
+    });
+
+    scene.addEventListener('animationend', (event) => {
+      if ((event as AnimationEvent).animationName.startsWith('cc-drive')) {
+        scene.dataset.driving = 'false';
+      }
+    });
+  }
+</script>

@@ -1,0 +1,194 @@
+---
+import { Image } from 'astro:assets';
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Icon from '../../components/Icon.astro';
+import { getAlbums, formatAlbumDate } from '../../lib/gallery';
+import { pageCopy } from '../../lib/sections';
+import { CONTACT } from '../../config';
+
+const albums = await getAlbums();
+const totalPhotos = albums.reduce((sum, album) => sum + album.count, 0);
+
+const Intro = (await pageCopy('gallery'))('intro');
+---
+
+<BaseLayout
+  title="Gallery"
+  description="Photos from Venturing Crew 167 — backpacking trips, service projects, flag retirement ceremonies, and hive days."
+>
+  <PageHeader
+    eyebrow="Photos"
+    title="Gallery"
+    lede={
+      albums.length > 0
+        ? `${totalPhotos} photos across ${albums.length} album${albums.length === 1 ? '' : 's'}.`
+        : 'Trips, ceremonies, service days, and the Crew Car.'
+    }
+  />
+
+  <section class="section">
+    <div class="wrap">
+      <div class="prose gallery-intro" data-reveal><Intro /></div>
+
+      {
+        albums.length > 0 ? (
+          <ul class="albums">
+            {albums.map((album, i) => (
+              <li class="albums__item" data-reveal style={`--reveal-delay:${Math.min(i, 6) * 70}ms`}>
+                <a class="album-card card card--link" href={`/gallery/${album.slug}/`}>
+                  <span class="album-card__media">
+                    <Image
+                      src={album.cover.src}
+                      alt=""
+                      widths={[320, 560, 800]}
+                      sizes="(max-width: 560px) 92vw, (max-width: 1000px) 45vw, 30vw"
+                      loading={i < 3 ? 'eager' : 'lazy'}
+                    />
+                    <span class="album-card__count">
+                      <Icon name="image" />
+                      {album.count}
+                    </span>
+                  </span>
+                  <span class="album-card__body">
+                    <h2>{album.title}</h2>
+                    {formatAlbumDate(album.date) && (
+                      <span class="small muted">{formatAlbumDate(album.date)}</span>
+                    )}
+                    {album.description && <span class="album-card__desc">{album.description}</span>}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="gallery-empty" data-reveal>
+            <Icon name="image" />
+            <h2>No albums yet</h2>
+            <p class="small muted">
+              In the meantime, the crew's living photo archive is on Instagram at{' '}
+              <a href={CONTACT.instagramUrl} rel="noopener">
+                @{CONTACT.instagramHandle}
+              </a>
+              .
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .gallery-intro {
+    margin-bottom: clamp(2rem, 1.5rem + 2vw, 3rem);
+  }
+
+  .albums {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: clamp(1rem, 0.7rem + 1.2vw, 1.75rem);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  }
+
+  .album-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .album-card__media {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+  .album-card__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.55s var(--ease);
+  }
+  .album-card:hover .album-card__media :global(img) {
+    transform: scale(1.045);
+  }
+
+  .album-card__count {
+    position: absolute;
+    top: 0.65rem;
+    right: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: rgb(8 20 14 / 0.62);
+    color: #fff;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    backdrop-filter: blur(6px);
+  }
+  .album-card__count :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .album-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1.1rem 1.2rem 1.3rem;
+  }
+  .album-card__body h2 {
+    font-size: var(--step-1);
+    line-height: 1.2;
+  }
+  .album-card__desc {
+    margin-top: 0.4rem;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.55;
+  }
+
+  /* ------------------------------------------------------------- empty */
+  .gallery-empty {
+    max-width: 60ch;
+    padding: clamp(1.75rem, 1.3rem + 2vw, 3rem);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .gallery-empty > :global(svg) {
+    width: 2rem;
+    height: 2rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .gallery-empty h2 {
+    font-size: var(--step-2);
+    margin-bottom: 0.75rem;
+  }
+  .gallery-empty p {
+    color: var(--ink-2);
+  }
+  .gallery-empty p + p {
+    margin-top: 1rem;
+  }
+  .gallery-empty code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 0.1em 0.35em;
+    white-space: nowrap;
+  }
+</style>

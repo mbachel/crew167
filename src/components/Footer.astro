@@ -1,0 +1,219 @@
+---
+import { SITE, CONTACT, MEETINGS, NAV, VENTURING_LINKS, INTEGRATIONS } from '../config';
+import Icon from './Icon.astro';
+import Brand from './Brand.astro';
+import TopoBg from './TopoBg.astro';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <TopoBg />
+
+  <div class="wrap site-footer__inner">
+    <div class="site-footer__brand">
+      <Brand size="4rem" />
+      <p class="site-footer__blurb">
+        A co-ed Venturing Crew for ages 14-20.
+      </p>
+      <a class="btn btn--brass btn--sm" href={INTEGRATIONS.joinUrl} rel="noopener">
+        Join the Crew
+      </a>
+    </div>
+
+    <nav class="site-footer__col" aria-label="Footer">
+      <h2>Explore</h2>
+      <ul>
+        {NAV.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <div class="site-footer__col">
+      <h2>Get in touch</h2>
+      <ul>
+        <li>
+          <a href={`mailto:${CONTACT.presidentEmail}`}>
+            <Icon name="mail" /> Crew President
+          </a>
+        </li>
+        <li>
+          <a href={`mailto:${CONTACT.advisorEmail}`}>
+            <Icon name="mail" /> Crew Advisor
+          </a>
+        </li>
+        <li>
+          <a href={CONTACT.instagramUrl} rel="me noopener">
+            <Icon name="instagram" /> @{CONTACT.instagramHandle}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="site-footer__col">
+      <h2>We meet</h2>
+      <p class="site-footer__meta">
+        {MEETINGS.cadence}<br />
+        {MEETINGS.time}
+      </p>
+      <p class="site-footer__meta">
+        <a href={MEETINGS.mapUrl} rel="noopener">
+          {MEETINGS.venue}<br />
+          {MEETINGS.address}
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap site-footer__bar">
+    <p class="small">© {year} {SITE.name}. Chartered under VFW Post 6724</p>
+    <ul class="site-footer__resources small">
+      {
+        VENTURING_LINKS.map((link) => (
+          <li>
+            <a href={link.href} rel="noopener">
+              {link.label}
+              <Icon name="external" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      radial-gradient(85% 130% at 88% 0%, var(--band-glow-2), transparent 62%),
+      var(--band-base);
+    color: rgb(255 255 255 / 0.76);
+    padding-top: clamp(2.75rem, 2rem + 3vw, 4.5rem);
+    margin-top: auto;
+  }
+
+  .site-footer::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green-500), var(--brass-400), var(--green-500));
+  }
+
+  .site-footer__inner {
+    position: relative;
+    display: grid;
+    gap: clamp(1.75rem, 1.2rem + 2.5vw, 3rem);
+    grid-template-columns: minmax(0, 1.55fr) repeat(3, minmax(0, 1fr));
+    padding-bottom: 2.75rem;
+  }
+
+  @media (max-width: 880px) {
+    .site-footer__inner {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    }
+    .site-footer__brand {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* The brand itself is Brand.astro; the footer only retints it. */
+  .site-footer__brand {
+    --brand-fg: #fff;
+    --brand-sub: rgb(255 255 255 / 0.6);
+  }
+
+  .site-footer__blurb {
+    margin: 1rem 0 1.35rem;
+    max-width: 42ch;
+    font-size: var(--step--1);
+    line-height: 1.7;
+  }
+
+  .site-footer__col h2 {
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--brass-300);
+    margin-bottom: 1rem;
+  }
+
+  .site-footer__col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .site-footer__col a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgb(255 255 255 / 0.78);
+    text-decoration: none;
+    font-size: var(--step--1);
+    transition: color 0.15s var(--ease);
+  }
+  .site-footer__col a:hover {
+    color: var(--brass-300);
+  }
+  .site-footer__col a :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    opacity: 0.75;
+  }
+
+  .site-footer__meta {
+    font-size: var(--step--1);
+    line-height: 1.7;
+    margin-bottom: 0.9rem;
+  }
+  .site-footer__meta a {
+    color: rgb(255 255 255 / 0.78);
+    text-decoration: none;
+  }
+  .site-footer__meta a:hover {
+    color: var(--brass-300);
+    text-decoration: underline;
+  }
+
+  .site-footer__bar {
+    position: relative;
+    border-top: 1px solid rgb(255 255 255 / 0.12);
+    padding-block: 1.25rem 1.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .site-footer__resources {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin: 0;
+    padding: 0;
+  }
+  .site-footer__resources a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: rgb(255 255 255 / 0.6);
+    text-decoration: none;
+  }
+  .site-footer__resources a:hover {
+    color: var(--brass-300);
+  }
+  .site-footer__resources :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+</style>

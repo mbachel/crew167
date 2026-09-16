@@ -1,0 +1,168 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/outfit';
+import '../styles/global.css';
+
+// Preloaded so the real faces are in flight with the stylesheet. Without this
+// the page paints in the fallback font and then reflows when the webfont
+// arrives, which reads as the whole page twitching on every navigation.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import outfitLatin from '@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2?url';
+
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE, CONTACT, MEETINGS } from '../config';
+
+interface Props {
+  title: string;
+  description?: string;
+  /**
+   * Every page opens with a dark banner — the hero on the homepage, PageHeader
+   * everywhere else — so the header starts transparent by default. Keeping it
+   * consistent means the bar doesn't restyle itself as you move between pages.
+   */
+  transparentHeader?: boolean;
+  bodyClass?: string;
+}
+
+const {
+  title,
+  description = SITE.description,
+  transparentHeader = true,
+  bodyClass = '',
+} = Astro.props;
+
+const pageTitle = title === SITE.name ? title : `${title} · ${SITE.name}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
+
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE.name,
+  alternateName: SITE.shortName,
+  url: SITE.url,
+  description: SITE.description,
+  email: CONTACT.presidentEmail,
+  foundingDate: String(SITE.founded),
+  sameAs: [CONTACT.instagramUrl],
+  location: {
+    '@type': 'Place',
+    name: MEETINGS.venue,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: MEETINGS.street,
+      addressLocality: MEETINGS.city,
+      addressRegion: MEETINGS.state,
+      postalCode: MEETINGS.zip,
+      addressCountry: 'US',
+    },
+  },
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={outfitLatin} as="font" type="font/woff2" crossorigin />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#14472f" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1310" media="(prefers-color-scheme: dark)" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={SITE.locale} />
+    <meta property="og:image" content={new URL('/og-image.jpg', SITE.url).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script is:inline set:html={JSON.stringify(orgSchema)} type="application/ld+json" />
+
+    {/* Set the theme before first paint so there is no flash of the wrong one. */}
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        // `reveal-init` suppresses the reveal transition until the first frame
+        // has painted, so on-screen content never animates in on load.
+        d.classList.add('js', 'reveal-init');
+        try {
+          var t = localStorage.getItem('crew167-theme');
+          if (t === 'dark' || t === 'light') d.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+
+  <body class={bodyClass}>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header transparent={transparentHeader} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+
+    {/* ~1.5 KB of behaviour: scroll reveal + header state. Nothing blocking. */}
+    <script>
+      const root = document.documentElement;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const revealables = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+
+      const releaseTransitions = () => {
+        // Two frames: one to paint the initial state, one to be sure it landed.
+        requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('reveal-init')));
+      };
+
+      if (reduced || !('IntersectionObserver' in window)) {
+        revealables.forEach((el) => el.classList.add('is-visible'));
+        releaseTransitions();
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add('is-visible');
+              io.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+        );
+
+        // Decide up front what's already on screen rather than letting the
+        // observer do it — its first callback can land after the transition
+        // has been re-enabled, which is exactly the flash we're avoiding.
+        const viewport = window.innerHeight;
+        for (const el of revealables) {
+          if (el.getBoundingClientRect().top < viewport * 0.95) {
+            el.classList.add('is-visible');
+          } else {
+            io.observe(el);
+          }
+        }
+        releaseTransitions();
+      }
+
+      // Header gains a solid background once you leave the top of the page.
+      const header = document.querySelector('[data-header]');
+      if (header) {
+        const sentinel = document.createElement('div');
+        sentinel.setAttribute('aria-hidden', 'true');
+        sentinel.style.cssText = 'position:absolute;top:0;height:1px;width:1px;';
+        document.body.prepend(sentinel);
+        new IntersectionObserver(
+          ([e]) => header.classList.toggle('is-stuck', !e.isIntersecting),
+          { threshold: 0 },
+        ).observe(sentinel);
+      }
+    </script>
+  </body>
+</html>

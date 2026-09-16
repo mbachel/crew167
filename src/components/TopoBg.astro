@@ -1,0 +1,19 @@
+---
+/**
+ * Topographic contour texture for a dark band (hero, page header, join band,
+ * footer).
+ *
+ * The artwork is `public/topo-map.webp` — real USGS contour data for Crowders
+ * Mountain and The Pinnacle, roughly 25 miles west of Charlotte and a short
+ * drive from Kings Mountain. USGS maps are public domain.
+ *
+ * To re-cut it over different terrain, see the Credits section of README.md —
+ * it has the exact request URL and the processing steps.
+ *
+ * Drop it as the first child of a `position: relative` band, and make sure the
+ * band's content sits in a `position: relative` wrapper so it stacks above.
+ * Styling lives in global.css under `.topo-bg`.
+ */
+---
+
+<div class="topo-bg" aria-hidden="true"></div>

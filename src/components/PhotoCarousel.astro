@@ -1,0 +1,272 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+/**
+ * A simple auto-advancing photo carousel.
+ *
+ * The slides sit in a flex track that is moved with a single transform, so the
+ * change is one composited animation rather than anything that touches layout.
+ * A clone of the first photo is appended to the end: advancing off the last
+ * real slide scrolls rightward onto the clone and then snaps back to the start
+ * with the transition switched off, so the loop always travels the same
+ * direction and the jump is never visible.
+ *
+ * Auto-advance stops while someone is hovering or has tabbed into it, while the
+ * tab is in the background, and entirely for anyone who has asked their system
+ * to reduce motion. Without JavaScript the first photo shows as a plain image.
+ */
+interface Props {
+  photos: ReadonlyArray<{ src: ImageMetadata; alt: string }>;
+  /** Describes the carousel for screen readers. */
+  label: string;
+  /** Milliseconds between slides. */
+  interval?: number;
+  widths?: number[];
+  sizes?: string;
+}
+
+const {
+  photos,
+  label,
+  interval = 5000,
+  widths = [420, 720, 1040],
+  sizes = '(max-width: 860px) 92vw, 46vw',
+} = Astro.props;
+
+const count = photos.length;
+const hasMany = count > 1;
+// The clone that makes the wrap-around travel rightward like every other step.
+const slides = hasMany ? [...photos, photos[0]!] : photos;
+---
+
+<div
+  class="carousel"
+  data-carousel
+  data-interval={interval}
+  data-count={count}
+  role="group"
+  aria-roledescription="carousel"
+  aria-label={label}
+>
+  <div class="carousel__viewport">
+    <ul class="carousel__track" data-carousel-track>
+      {
+        slides.map((photo, i) => {
+          const isClone = hasMany && i === count;
+          return (
+            <li
+              class="carousel__slide"
+              data-carousel-slide={isClone ? 'clone' : 'real'}
+              role={isClone ? undefined : 'group'}
+              aria-roledescription={isClone ? undefined : 'slide'}
+              aria-label={isClone ? undefined : `${i + 1} of ${count}`}
+              aria-hidden={i === 0 ? undefined : 'true'}
+            >
+              <Image
+                src={photo.src}
+                alt={isClone ? '' : photo.alt}
+                widths={widths}
+                sizes={sizes}
+                loading={i === 0 ? 'eager' : 'lazy'}
+              />
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+
+  {
+    hasMany && (
+      <div class="carousel__dots" data-carousel-dots>
+        {photos.map((photo, i) => (
+          <button
+            class="carousel__dot"
+            type="button"
+            data-carousel-dot={i}
+            aria-label={`Show photo ${i + 1} of ${count}: ${photo.alt}`}
+            aria-current={i === 0 ? 'true' : 'false'}
+          >
+            <span />
+          </button>
+        ))}
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .carousel {
+    display: grid;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+
+  .carousel__viewport {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .carousel__track {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    transition: transform 0.6s var(--ease);
+    will-change: transform;
+  }
+
+  .carousel__slide {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+
+  .carousel__slide :global(img) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  /* ---- dots ---- */
+  .carousel__dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.15rem;
+  }
+
+  /* The button is a 24px target even though the dot itself is small, so it is
+     comfortably tappable (and meets the WCAG minimum target size). */
+  .carousel__dot {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+
+  .carousel__dot span {
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--line-strong);
+    transition:
+      background-color 0.2s var(--ease),
+      transform 0.2s var(--ease);
+  }
+
+  .carousel__dot:hover span {
+    background: var(--ink-3);
+  }
+
+  .carousel__dot[aria-current='true'] span {
+    background: var(--accent);
+    transform: scale(1.35);
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-carousel]')) {
+    const track = root.querySelector<HTMLElement>('[data-carousel-track]');
+    if (!track) continue;
+
+    const count = Number(root.dataset.count ?? 0);
+    const interval = Number(root.dataset.interval ?? 5000);
+    if (count < 2) continue;
+
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-carousel-slide]'));
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-carousel-dot]'));
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /** 0..count, where `count` is the clone of the first slide. */
+    let pos = 0;
+    let timer = 0;
+    let hovered = false;
+    let focused = false;
+
+    const paint = () => {
+      const current = pos % count;
+      dots.forEach((dot, i) => dot.setAttribute('aria-current', String(i === current)));
+      slides.forEach((slide, i) => {
+        // The clone is never announced; it is the same picture as slide 0.
+        if (i === count || i !== current) slide.setAttribute('aria-hidden', 'true');
+        else slide.removeAttribute('aria-hidden');
+      });
+    };
+
+    const set = (next: number, instant = false) => {
+      pos = next;
+      if (instant) {
+        track.style.transition = 'none';
+        track.style.transform = `translateX(-${pos * 100}%)`;
+        void track.offsetHeight; // flush the change before transitions resume
+        track.style.transition = '';
+      } else {
+        track.style.transform = `translateX(-${pos * 100}%)`;
+      }
+      paint();
+    };
+
+    // Landing on the clone means we are visually at slide 0 — snap there for
+    // real, with no transition, so the next advance continues rightward.
+    track.addEventListener('transitionend', (event) => {
+      if (event.target !== track || event.propertyName !== 'transform') return;
+      if (pos === count) set(0, true);
+    });
+
+    const stop = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = 0;
+      }
+    };
+
+    const shouldRun = () => !hovered && !focused && !document.hidden && !reduced.matches;
+
+    const sync = () => {
+      stop();
+      if (shouldRun()) timer = window.setInterval(() => set(pos + 1), interval);
+    };
+
+    root.addEventListener('mouseenter', () => {
+      hovered = true;
+      sync();
+    });
+    root.addEventListener('mouseleave', () => {
+      hovered = false;
+      sync();
+    });
+    root.addEventListener('focusin', () => {
+      focused = true;
+      sync();
+    });
+    root.addEventListener('focusout', () => {
+      focused = false;
+      sync();
+    });
+
+    document.addEventListener('visibilitychange', sync);
+    reduced.addEventListener('change', sync);
+
+    dots.forEach((dot, i) => {
+      dot.addEventListener('click', () => {
+        // If we are sitting on the clone, rebase to slide 0 first so the jump
+        // animates from where the viewer actually is.
+        if (pos === count) set(0, true);
+        set(i);
+        sync(); // a deliberate choice restarts the full interval
+      });
+    });
+
+    paint();
+    sync();
+  }
+</script>

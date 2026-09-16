@@ -1,0 +1,72 @@
+---
+import { SITE } from '../config';
+import Logo from './Logo.astro';
+
+/**
+ * The crew wordmark — emblem plus name. Used identically in the header and the
+ * footer, so there's one definition rather than two that drift apart.
+ *
+ * Styling notes:
+ * - `size` sets the emblem box. The SVG inside fills it; never try to size the
+ *   logo from a parent component's stylesheet (see Logo.astro for why).
+ * - Colours come from inherited custom properties, so a parent can retheme it
+ *   without needing to select into this component: set `--brand-fg` and
+ *   `--brand-sub` on any ancestor. Custom properties inherit across component
+ *   boundaries, ordinary class selectors do not.
+ */
+interface Props {
+  /** Emblem size, any CSS length. */
+  size?: string;
+}
+const { size = '4rem' } = Astro.props;
+---
+
+<a class="brand" href="/" aria-label={`${SITE.name} — home`} style={`--brand-mark:${size}`}>
+  <span class="brand__mark"><Logo title={false} /></span>
+  <span class="brand__text">
+    <strong>{SITE.name}</strong>
+    <span>Chartered 2015<br />Charlotte, NC</span>
+  </span>
+</a>
+
+<style>
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: var(--brand-fg, inherit);
+    flex: none;
+    min-width: 0;
+  }
+
+  .brand__mark {
+    flex: none;
+    display: block;
+    width: var(--brand-mark);
+    height: var(--brand-mark);
+    transition: transform 0.35s var(--ease);
+  }
+  .brand:hover .brand__mark {
+    transform: scale(1.06);
+  }
+
+  .brand__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    min-width: 0;
+  }
+  .brand__text strong {
+    font-family: var(--font-display);
+    font-size: 1.06rem;
+    font-weight: 680;
+    letter-spacing: -0.015em;
+  }
+  .brand__text span {
+    font-size: 0.80rem;
+    letter-spacing: 0.1em;
+    font-weight: bold;
+    color: var(--brand-sub, var(--ink-3));
+  }
+</style>

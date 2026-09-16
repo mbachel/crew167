@@ -1,0 +1,686 @@
+---
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Icon from '../components/Icon.astro';
+import { BYLAWS } from '../config';
+import { pageCopy, pageGroup } from '../lib/sections';
+
+// The intro, the five articles and the leadership roster all come from the
+// single file src/content/pages/by-laws.md. The articles keep the document's
+// own wording; the roster restates each role in plainer terms underneath.
+const Intro = (await pageCopy('by-laws'))('intro');
+const articles = await pageGroup('by-laws', 'articles');
+const electedRoles = await pageGroup('by-laws', 'elected-positions');
+const appointedRoles = await pageGroup('by-laws', 'appointed-positions');
+
+// Save the signed by-laws PDF here and the button links straight to it;
+// until then it falls back to printing the page, so the link is never dead.
+const PDF_FILE = 'Crew-167-By-laws.pdf';
+const pdfHref = `/${PDF_FILE}`;
+const hasPdf = existsSync(fileURLToPath(new URL(`../../public/${PDF_FILE}`, import.meta.url)));
+---
+
+<BaseLayout
+  title="By-Laws"
+  description="The by-laws of Venturing Crew 167 — purpose, business rules, elections, discipline, behaviour, dress code, safety, and the crew leadership roster."
+>
+  <PageHeader
+    eyebrow="How the crew runs"
+    title="By-Laws"
+    lede="Of the Crew, by the Crew, for the Crew."
+  >
+    <div class="btn-row bylaws-actions">
+      <span class="tag tag--brass">Revised {BYLAWS.revised}</span>
+      {
+        hasPdf ? (
+          <a class="btn btn--on-dark btn--sm" href={pdfHref} download>
+            <Icon name="download" />
+            Download the PDF
+          </a>
+        ) : (
+          <button class="btn btn--on-dark btn--sm" type="button" data-print>
+            <Icon name="download" />
+            Print / save as PDF
+          </button>
+        )
+      }
+    </div>
+  </PageHeader>
+
+  <div class="wrap bylaws">
+    {/* ------------------------------------------------------------ sidebar */}
+    <aside class="bylaws__aside" aria-label="On this page">
+      <div class="toc">
+        <div class="toc__search">
+          <Icon name="search" />
+          <input
+            type="search"
+            id="bylaws-search"
+            placeholder="Search the by-laws…"
+            autocomplete="off"
+            data-bylaws-search
+            aria-describedby="bylaws-search-status"
+          />
+        </div>
+        <p class="toc__status small muted" id="bylaws-search-status" role="status" aria-live="polite"></p>
+
+        <nav>
+          <p class="toc__label">Articles</p>
+          <ol class="toc__list">
+            {
+              articles.map((article) => (
+                <li>
+                  <a href={`#article-${article.order}`} data-toc-link={`article-${article.order}`}>
+                    <span class="toc__num">{article.order}</span>
+                    {article.title}
+                  </a>
+                </li>
+              ))
+            }
+          </ol>
+          <p class="toc__hint small muted">
+            <button type="button" data-bylaws-expand>Expand all</button>
+            <span aria-hidden="true">·</span>
+            <button type="button" data-bylaws-collapse>Collapse all</button>
+          </p>
+          <p class="toc__extra small">
+            <a href="#leadership">Crew Leadership</a>
+          </p>
+        </nav>
+      </div>
+    </aside>
+
+    {/* ------------------------------------------------------------ content */}
+    <div class="bylaws__body">
+      <div class="prose bylaws__intro" data-reveal>
+        <Intro />
+      </div>
+
+      <p class="bylaws__empty" data-bylaws-empty hidden>
+        Nothing in the by-laws matches that. <button type="button" data-bylaws-clear>Clear the search</button>.
+      </p>
+
+      <div class="bylaws__articles">
+        {
+          articles.map((article) => (
+            <details
+              class="bylaws-article"
+              id={`article-${article.order}`}
+              data-bylaws-article
+              data-title={article.title}
+              open={article.order === 1}
+            >
+              <summary>
+                <span class="bylaws-article__num" aria-hidden="true">
+                  {article.order}
+                </span>
+                <span class="bylaws-article__title">{article.title}</span>
+                <span class="bylaws-article__chevron" aria-hidden="true">
+                  <Icon name="chevron-down" />
+                </span>
+              </summary>
+              <div class="prose prose--legal bylaws-article__body">
+                <article.Content />
+              </div>
+            </details>
+          ))
+        }
+      </div>
+
+      {/* --------------------------------------------------------- leadership */}
+      <section class="leadership" id="leadership">
+        <h2 class="leadership__heading">Crew Leadership</h2>
+        <p class="leadership__note">
+          Every officer attends at least 50% of the meetings and outings in their term, keeps a
+          notebook of records and requirements to hand on to the next officer, and completes
+          Introduction to Leadership Skills for Crews (ILSC) within 90 days of the election. The
+          Crew Advisors support all youth leaders.
+        </p>
+
+        <h3 class="leadership__group">Elected positions</h3>
+        <p class="leadership__group-note small muted">
+          Elected by the youth members. Terms run 12 months, May to May.
+        </p>
+        <div class="roles">
+          {
+            electedRoles.map((role) => (
+              <article class="role">
+                <h4 class="role__title">{role.title}</h4>
+                <div class="prose role__body">
+                  <role.Content />
+                </div>
+              </article>
+            ))
+          }
+        </div>
+
+        <h3 class="leadership__group">Appointed positions</h3>
+        <p class="leadership__group-note small muted">
+          Appointed by the President as needed, on a case-by-case basis, with the approval of the
+          Advisor.
+        </p>
+        <div class="roles">
+          {
+            appointedRoles.map((role) => (
+              <article class="role">
+                <h4 class="role__title">{role.title}</h4>
+                <div class="prose role__body">
+                  <role.Content />
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .bylaws-actions {
+    margin-top: 1.75rem;
+  }
+  .bylaws-actions :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .bylaws {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: clamp(2rem, 1.4rem + 3vw, 4rem);
+    padding-block: clamp(2.5rem, 1.8rem + 3vw, 4.5rem);
+    align-items: start;
+  }
+
+  @media (max-width: 940px) {
+    .bylaws {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ------------------------------------------------------------- sidebar */
+  .bylaws__aside {
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+  }
+  @media (max-width: 940px) {
+    .bylaws__aside {
+      position: static;
+    }
+  }
+
+  .toc {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .toc__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .toc__search :global(svg) {
+    position: absolute;
+    left: 0.7rem;
+    width: 1rem;
+    height: 1rem;
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .toc__search input {
+    width: 100%;
+    padding: 0.55rem 0.7rem 0.55rem 2.15rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: var(--step--1);
+  }
+  .toc__search input:focus-visible {
+    border-color: var(--accent);
+    outline-offset: 1px;
+  }
+  .toc__search input::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+
+  .toc__status:empty {
+    display: none;
+  }
+  .toc__status {
+    margin-top: 0.5rem;
+  }
+
+  .toc__label {
+    margin: 1rem 0 0.5rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .toc__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.1rem;
+    counter-reset: none;
+  }
+
+  .toc__list a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    text-decoration: none;
+    font-size: var(--step--1);
+    line-height: 1.35;
+    transition:
+      background-color 0.15s var(--ease),
+      color 0.15s var(--ease);
+  }
+  .toc__list a:hover {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+  .toc__list a[aria-current='true'] {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 580;
+  }
+  .toc__list a[hidden] {
+    display: none;
+  }
+
+  .toc__num {
+    flex: none;
+    width: 1.4rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-3);
+    font-size: 0.78rem;
+  }
+  .toc__num :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+    position: static;
+  }
+
+  /* -------------------------------------------------------------- content */
+  .bylaws__intro {
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2.5rem;
+  }
+
+  .bylaws__empty {
+    padding: 1.5rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    color: var(--ink-2);
+  }
+  .bylaws__empty button {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--accent-ink);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* ------------------------------------------------------- article dropdowns */
+  .bylaws__articles {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .bylaws-article {
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition:
+      border-color 0.15s var(--ease),
+      box-shadow 0.15s var(--ease);
+  }
+  .bylaws-article[open] {
+    border-color: color-mix(in oklab, var(--accent) 35%, var(--line));
+    box-shadow: var(--shadow-sm);
+  }
+  .bylaws-article[hidden] {
+    display: none;
+  }
+
+  .bylaws-article summary {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.95rem 1.15rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    border-radius: var(--radius);
+  }
+  .bylaws-article summary::-webkit-details-marker {
+    display: none;
+  }
+  .bylaws-article summary:hover {
+    background: var(--surface-2);
+  }
+
+  .bylaws-article__num {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bylaws-article__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 620;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  .bylaws-article__chevron {
+    flex: none;
+    display: grid;
+    place-items: center;
+    color: var(--ink-3);
+    transition: transform 0.2s var(--ease);
+  }
+  .bylaws-article__chevron :global(svg) {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+  .bylaws-article[open] .bylaws-article__chevron {
+    transform: rotate(180deg);
+  }
+
+  .bylaws-article__body {
+    padding: 1.25rem 1.35rem 1.5rem;
+    border-top: 1px solid var(--line);
+    max-width: none;
+  }
+
+  .toc__hint {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--line);
+  }
+  .toc__hint button {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--accent-ink);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+  }
+  .toc__hint button:hover {
+    color: var(--highlight);
+  }
+
+  .toc__extra {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+  }
+  .toc__extra a {
+    text-decoration: none;
+    font-weight: 550;
+  }
+  .toc__extra a:hover {
+    text-decoration: underline;
+  }
+
+  /* ------------------------------------------------------------ leadership */
+  .leadership {
+    margin-top: clamp(2.5rem, 2rem + 2vw, 4rem);
+    padding-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+    border-top: 1px solid var(--line);
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  .leadership__heading {
+    font-size: var(--step-2);
+    margin-bottom: 0.9rem;
+  }
+
+  .leadership__note {
+    color: var(--ink-2);
+    max-width: var(--measure);
+    margin-bottom: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+  }
+
+  .leadership__group {
+    font-size: var(--step-1);
+    margin-top: 2.25rem;
+  }
+  .leadership__group:first-of-type {
+    margin-top: 0;
+  }
+  .leadership__group-note {
+    margin: 0.3rem 0 1.1rem;
+  }
+
+  /* Plain cards, deliberately not dropdowns — the whole roster stays readable
+     at a glance and prints in full. */
+  .roles {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  }
+
+  .role {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: 1.1rem 1.25rem 1.25rem;
+  }
+
+  .role__title {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 640;
+    margin-bottom: 0.4rem;
+  }
+
+  .role__body {
+    max-width: none;
+    font-size: var(--step--1);
+  }
+  .role__body :global(ul) {
+    padding-left: 1.15em;
+  }
+  .role__body :global(li + li) {
+    margin-top: 0.3em;
+  }
+  .role__body :global(p + ul),
+  .role__body :global(ul + p) {
+    margin-top: 0.7em;
+  }
+
+  /* ---------------------------------------------------------------- print
+     Only reached if someone prints the web page rather than using the PDF. */
+  @media print {
+    .bylaws {
+      grid-template-columns: 1fr;
+      padding-block: 0;
+    }
+    .bylaws__aside {
+      display: none;
+    }
+    .bylaws-article {
+      break-inside: avoid;
+      border: 0;
+      box-shadow: none;
+    }
+    .bylaws-article__body {
+      display: block !important;
+    }
+  }
+</style>
+
+<script>
+  /* --------------------------------------------------------- print button */
+  document
+    .querySelector<HTMLButtonElement>('[data-print]')
+    ?.addEventListener('click', () => window.print());
+
+  /* ------------------------------------------------------------ TOC state */
+  const links = new Map<string, HTMLAnchorElement>();
+  document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((link) => {
+    links.set(link.dataset.tocLink!, link);
+  });
+
+  const articles = Array.from(
+    document.querySelectorAll<HTMLDetailsElement>('[data-bylaws-article]'),
+  );
+
+  /* ---------------------------------- expand / collapse, and open on jump */
+  document.querySelector('[data-bylaws-expand]')?.addEventListener('click', () => {
+    articles.forEach((el) => (el.open = true));
+  });
+  document.querySelector('[data-bylaws-collapse]')?.addEventListener('click', () => {
+    articles.forEach((el) => (el.open = false));
+  });
+
+  // A collapsed article can't be scrolled to usefully, so jumping to one from
+  // the contents list (or a pasted #article-3 link) opens it first.
+  const openFromHash = () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!id) return;
+    const target = document.getElementById(id);
+    if (target instanceof HTMLDetailsElement) {
+      target.open = true;
+      target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+  };
+  window.addEventListener('hashchange', openFromHash);
+  openFromHash();
+
+  links.forEach((link, id) => {
+    link.addEventListener('click', () => {
+      const target = document.getElementById(id);
+      if (target instanceof HTMLDetailsElement) target.open = true;
+    });
+  });
+
+  window.addEventListener('beforeprint', () => {
+    articles.forEach((el) => (el.open = true));
+  });
+
+  if ('IntersectionObserver' in window && articles.length > 0) {
+    const visible = new Set<string>();
+
+    const spy = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        }
+        // Highlight the topmost section currently on screen.
+        const current = articles.find((a) => visible.has(a.id))?.id;
+        links.forEach((link, id) => {
+          if (id === current) link.setAttribute('aria-current', 'true');
+          else link.removeAttribute('aria-current');
+        });
+      },
+      { rootMargin: '-20% 0px -65% 0px', threshold: 0 },
+    );
+
+    articles.forEach((article) => spy.observe(article));
+  }
+
+  /* --------------------------------------------------------------- search */
+  const input = document.querySelector<HTMLInputElement>('[data-bylaws-search]');
+  const status = document.getElementById('bylaws-search-status');
+  const empty = document.querySelector<HTMLElement>('[data-bylaws-empty]');
+  const clear = document.querySelector<HTMLButtonElement>('[data-bylaws-clear]');
+
+  if (input) {
+    // Index once; searching then costs nothing.
+    const index = articles.map((el) => ({
+      el,
+      id: el.id,
+      haystack: `${el.dataset.title ?? ''} ${el.textContent ?? ''}`.toLowerCase(),
+    }));
+
+    // Remember how the reader had the dropdowns before searching, so clearing
+    // the box puts the page back rather than leaving everything flung open.
+    let beforeSearch: boolean[] | null = null;
+
+    const apply = (raw: string) => {
+      const query = raw.trim().toLowerCase();
+      let matches = 0;
+
+      if (query !== '' && beforeSearch === null) {
+        beforeSearch = index.map((entry) => entry.el.open);
+      }
+
+      for (const entry of index) {
+        const hit = query === '' || entry.haystack.includes(query);
+        entry.el.hidden = !hit;
+        links.get(entry.id)?.toggleAttribute('hidden', !hit);
+        // Open what matched — a hit buried inside a collapsed article is no use.
+        if (query !== '') entry.el.open = hit;
+        if (hit) matches += 1;
+      }
+
+      if (query === '' && beforeSearch) {
+        index.forEach((entry, i) => (entry.el.open = beforeSearch![i]!));
+        beforeSearch = null;
+      }
+
+      if (empty) empty.hidden = matches > 0;
+      if (status) {
+        status.textContent =
+          query === ''
+            ? ''
+            : `${matches} of ${index.length} article${index.length === 1 ? '' : 's'}`;
+      }
+    };
+
+    let frame = 0;
+    input.addEventListener('input', () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => apply(input.value));
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        input.value = '';
+        apply('');
+      }
+    });
+
+    clear?.addEventListener('click', () => {
+      input.value = '';
+      apply('');
+      input.focus();
+    });
+  }
+</script>

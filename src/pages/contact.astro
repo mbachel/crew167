@@ -1,0 +1,489 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Icon from '../components/Icon.astro';
+import {
+  CONTACT,
+  MEETINGS,
+  INTEGRATIONS,
+  formspreeEndpoint,
+  isFormspreeConfigured,
+} from '../config';
+import { pageCopy } from '../lib/sections';
+
+const Intro = (await pageCopy('contact'))('intro');
+
+const topics = [
+  'Joining the crew',
+  'Visiting a meeting',
+  'Flag retirement',
+  'Beekeeping / honey',
+  'Something else',
+];
+---
+
+<BaseLayout
+  title="Contact"
+  description="Get in touch with Venturing Crew 167 in Charlotte, NC — questions about joining, visiting a meeting, or flag retirement."
+>
+  <PageHeader
+    eyebrow="Get in touch"
+    title="Contact the Crew"
+    lede="How to reach our Crew outside meetings."
+  />
+
+  <section class="section">
+    <div class="wrap contact">
+      {/* -------------------------------------------------------- the form */}
+      <div class="contact__form-col">
+        <div class="prose contact__intro" data-reveal><Intro /></div>
+
+        {
+          isFormspreeConfigured ? (
+            <form
+              class="form"
+              action={formspreeEndpoint}
+              method="POST"
+              data-contact-form
+              data-reveal
+              novalidate
+            >
+              <div class="form__row">
+                <div class="field">
+                  <label for="name">
+                    Name <span aria-hidden="true">*</span>
+                  </label>
+                  <input type="text" id="name" name="name" required autocomplete="name" />
+                  <p class="field__error" data-error-for="name"></p>
+                </div>
+
+                <div class="field">
+                  <label for="email">
+                    Email <span aria-hidden="true">*</span>
+                  </label>
+                  <input type="email" id="email" name="email" required autocomplete="email" />
+                  <p class="field__error" data-error-for="email"></p>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="topic">What's this about?</label>
+                <select id="topic" name="topic">
+                  {topics.map((topic) => (
+                    <option value={topic}>{topic}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="message">
+                  Message <span aria-hidden="true">*</span>
+                </label>
+                <textarea id="message" name="message" rows="6" required />
+                <p class="field__error" data-error-for="message"></p>
+              </div>
+
+              {/* Spam trap — real people never see or fill this. */}
+              <div class="visually-hidden" aria-hidden="true">
+                <label for="_gotcha">Leave this field empty</label>
+                <input type="text" id="_gotcha" name="_gotcha" tabindex="-1" autocomplete="off" />
+              </div>
+
+              <div class="form__actions">
+                <button class="btn" type="submit" data-submit>
+                  <span data-submit-label>Send message</span>
+                  <Icon name="arrow-right" />
+                </button>
+                <p class="small muted">We usually reply within a few days.</p>
+              </div>
+
+              <p class="form__status" role="status" aria-live="polite" data-form-status hidden></p>
+            </form>
+          ) : (
+            <div class="form-setup" data-reveal>
+              <Icon name="mail" />
+              <div>
+                <h2>The form isn't connected yet</h2>
+                <p>
+                  Create a free form at <a href="https://formspree.io" rel="noopener">formspree.io</a>,
+                  then paste its form ID into <code>src/config.ts</code>. Full steps are in{' '}
+                  <code>SETUP.md</code>.
+                </p>
+                <p>In the meantime, email works perfectly well:</p>
+                <p>
+                  <a class="btn btn--sm" href={`mailto:${CONTACT.presidentEmail}`}>
+                    <Icon name="mail" />
+                    {CONTACT.presidentEmail}
+                  </a>
+                </p>
+              </div>
+            </div>
+          )
+        }
+      </div>
+
+      {/* ------------------------------------------------------- the details */}
+      <aside class="contact__aside">
+        <div class="card" data-reveal>
+          <h2 class="contact__card-title">
+            <Icon name="mail" />
+            Email us directly
+          </h2>
+          <dl class="deflist">
+            <div class="deflist__row">
+              <div>
+                <dt>Crew President</dt>
+                <dd>
+                  <a href={`mailto:${CONTACT.presidentEmail}`}>{CONTACT.presidentEmail}</a>
+                </dd>
+              </div>
+            </div>
+            <div class="deflist__row">
+              <div>
+                <dt>Crew Advisor</dt>
+                <dd><a href={`mailto:${CONTACT.advisorEmail}`}>{CONTACT.advisorEmail}</a></dd>
+              </div>
+            </div>
+          </dl>
+        </div>
+
+        <div class="card" data-reveal>
+          <h2 class="contact__card-title">
+            <Icon name="pin" />
+            Come to a meeting
+          </h2>
+          <p class="contact__meeting">
+            <strong>{MEETINGS.cadence}</strong><br />
+            {MEETINGS.time}
+          </p>
+          <p class="contact__meeting muted">
+            {MEETINGS.venue}<br />
+            {MEETINGS.address}
+          </p>
+          <div class="btn-row">
+            <a class="btn btn--ghost btn--sm" href={MEETINGS.mapUrl} rel="noopener">
+              Directions
+              <Icon name="external" />
+            </a>
+            <a class="btn btn--ghost btn--sm" href="/calendar/">Calendar</a>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <h2 class="contact__card-title">
+            <Icon name="instagram" />
+            Follow along
+          </h2>
+          <p class="small muted contact__meeting">
+            The fastest way to see what the crew is actually doing week to week.
+          </p>
+          <a class="btn btn--sm" href={CONTACT.instagramUrl} rel="noopener">
+            @{CONTACT.instagramHandle}
+          </a>
+        </div>
+
+        <div class="card contact__join" data-reveal>
+          <h2 class="contact__card-title">
+            <Icon name="users" />
+            Ready to register?
+          </h2>
+          <p class="small muted contact__meeting">
+            Youth 14-20 (or 13 and finished with eighth grade) can register through Scouting
+            America's online system.
+          </p>
+          <a class="btn btn--brass btn--sm" href={INTEGRATIONS.joinUrl} rel="noopener">
+            Register with Scouting America
+            <Icon name="external" />
+          </a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .contact {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: clamp(1.75rem, 1.2rem + 3vw, 3.5rem);
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .contact {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .contact__intro {
+    margin-bottom: 2rem;
+  }
+
+  .contact__aside {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .contact__card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 1rem;
+  }
+  .contact__card-title :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    color: var(--accent);
+  }
+
+  .contact__meeting {
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .contact__aside :global(.btn svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .contact__aside :global(dd a) {
+    word-break: break-word;
+  }
+
+  /* ----------------------------------------------------------------- form */
+  .form {
+    display: grid;
+    gap: 1.15rem;
+  }
+
+  .form__row {
+    display: grid;
+    gap: 1.15rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+
+  .field {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .field label {
+    font-size: var(--step--1);
+    font-weight: 580;
+    color: var(--ink);
+  }
+  .field label span {
+    color: var(--clay-500);
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: var(--step-0);
+    transition:
+      border-color 0.15s var(--ease),
+      box-shadow 0.15s var(--ease);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 8rem;
+    line-height: 1.6;
+  }
+
+  .field input:focus-visible,
+  .field select:focus-visible,
+  .field textarea:focus-visible {
+    border-color: var(--accent);
+    outline-offset: 1px;
+  }
+
+  .field[data-invalid='true'] input,
+  .field[data-invalid='true'] textarea {
+    border-color: var(--clay-500);
+  }
+
+  .field__error {
+    font-size: var(--step--1);
+    color: var(--clay-500);
+    min-height: 0;
+  }
+  .field__error:empty {
+    display: none;
+  }
+
+  .form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.35rem;
+  }
+  .form__actions :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .form button[disabled] {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .form__status {
+    padding: 0.9rem 1.1rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--step--1);
+    line-height: 1.55;
+  }
+  .form__status[data-tone='ok'] {
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+    color: var(--accent-ink);
+  }
+  .form__status[data-tone='error'] {
+    background: color-mix(in oklab, var(--clay-500) 12%, transparent);
+    border: 1px solid color-mix(in oklab, var(--clay-500) 35%, transparent);
+    color: var(--clay-500);
+  }
+
+  /* ---------------------------------------------------------------- setup */
+  .form-setup {
+    display: flex;
+    gap: 1.15rem;
+    padding: clamp(1.35rem, 1rem + 1.4vw, 2rem);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .form-setup > :global(svg) {
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    color: var(--accent);
+  }
+  .form-setup h2 {
+    font-size: var(--step-1);
+    margin-bottom: 0.6rem;
+  }
+  .form-setup p {
+    color: var(--ink-2);
+  }
+  .form-setup p + p {
+    margin-top: 0.85rem;
+  }
+  .form-setup code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 0.1em 0.35em;
+  }
+  .form-setup :global(.btn svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+
+  if (form) {
+    const status = form.querySelector<HTMLElement>('[data-form-status]')!;
+    const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+    const label = form.querySelector<HTMLElement>('[data-submit-label]')!;
+    const originalLabel = label.textContent ?? 'Send message';
+
+    const setError = (field: HTMLInputElement | HTMLTextAreaElement, message: string) => {
+      const wrapper = field.closest<HTMLElement>('.field');
+      const slot = form.querySelector<HTMLElement>(`[data-error-for="${field.name}"]`);
+      if (wrapper) wrapper.dataset.invalid = message ? 'true' : 'false';
+      if (slot) slot.textContent = message;
+      field.setAttribute('aria-invalid', message ? 'true' : 'false');
+    };
+
+    const validate = (): boolean => {
+      let firstBad: HTMLElement | null = null;
+
+      for (const field of form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+        'input[required], textarea[required]',
+      )) {
+        const value = field.value.trim();
+        let message = '';
+
+        if (!value) {
+          message = 'This one is required.';
+        } else if (field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
+          message = "That email address doesn't look right.";
+        }
+
+        setError(field, message);
+        if (message && !firstBad) firstBad = field;
+      }
+
+      firstBad?.focus();
+      return firstBad === null;
+    };
+
+    // Clear an error as soon as the person starts fixing it.
+    form.addEventListener('input', (event) => {
+      const target = event.target as HTMLInputElement | HTMLTextAreaElement;
+      if (target.matches('[aria-invalid="true"]')) setError(target, '');
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!validate()) return;
+
+      submit.disabled = true;
+      label.textContent = 'Sending…';
+      status.hidden = true;
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+
+        if (response.ok) {
+          form.reset();
+          status.dataset.tone = 'ok';
+          status.textContent =
+            "Thanks — that's on its way. Someone from the crew will get back to you within a few days.";
+          status.hidden = false;
+          label.textContent = 'Sent';
+          // Leave the button disabled briefly so a double-tap can't resend.
+          setTimeout(() => {
+            submit.disabled = false;
+            label.textContent = originalLabel;
+          }, 4000);
+          return;
+        }
+
+        const body = (await response.json().catch(() => null)) as {
+          errors?: { message: string }[];
+        } | null;
+
+        throw new Error(body?.errors?.map((e) => e.message).join(', ') || 'Something went wrong.');
+      } catch (error) {
+        status.dataset.tone = 'error';
+        status.textContent = `${
+          error instanceof Error ? error.message : 'Something went wrong.'
+        } You can also email us directly and we'll pick it up there.`;
+        status.hidden = false;
+        submit.disabled = false;
+        label.textContent = originalLabel;
+      }
+    });
+  }
+</script>

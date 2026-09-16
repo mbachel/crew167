@@ -1,0 +1,210 @@
+---
+import Icon from './Icon.astro';
+
+/**
+ * A horizontal strip of same-shaped photos that scrolls one photo at a time.
+ *
+ * Built on native scroll-snap rather than a JS slider: the track is an ordinary
+ * overflow-x container, so it already works with a trackpad, a touch swipe, the
+ * keyboard and a screen reader before any script runs. The buttons only call
+ * scrollBy() — if the JS fails, the strip is still scrollable.
+ */
+interface Props {
+  images: ReadonlyArray<{ src: string; alt: string }>;
+  /** How many photos are visible at once on a wide screen. */
+  perView?: number;
+  /** Describes the strip for screen readers. */
+  label: string;
+}
+
+const { images, perView = 4, label } = Astro.props;
+---
+
+<div class="scroller" data-scroller style={`--per-view:${perView}`}>
+  <button
+    class="scroller__btn scroller__btn--prev"
+    type="button"
+    data-scroller-prev
+    aria-label="Previous photo"
+    aria-controls="scroller-track"
+  >
+    <Icon name="chevron-down" />
+  </button>
+
+  <ul
+    class="scroller__track"
+    id="scroller-track"
+    data-scroller-track
+    tabindex="0"
+    role="group"
+    aria-label={label}
+  >
+    {
+      images.map((image) => (
+        <li class="scroller__item">
+          <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+        </li>
+      ))
+    }
+  </ul>
+
+  <button
+    class="scroller__btn scroller__btn--next"
+    type="button"
+    data-scroller-next
+    aria-label="Next photo"
+    aria-controls="scroller-track"
+  >
+    <Icon name="chevron-down" />
+  </button>
+</div>
+
+<style>
+  .scroller {
+    --gap: clamp(0.5rem, 0.35rem + 0.6vw, 0.9rem);
+    position: relative;
+  }
+
+  .scroller__track {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: var(--gap);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    /* Room for the overlaid buttons at the edges. */
+    padding-inline: 2.6rem;
+    scroll-padding-inline: 2.6rem;
+    scrollbar-width: none;
+  }
+  .scroller__track::-webkit-scrollbar {
+    display: none;
+  }
+  .scroller__track:focus-visible {
+    outline: 2.5px solid var(--highlight);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroller__track {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Exactly --per-view photos across, accounting for the gaps between them. */
+  .scroller__item {
+    flex: 0 0 calc((100% - (var(--per-view) - 1) * var(--gap)) / var(--per-view));
+    scroll-snap-align: start;
+  }
+
+  /* Fixed shape and cover-cropped, so every photo in the strip renders at
+     identical width and height no matter what the source file's dimensions
+     are. Source photos are 702 x 936, which is this ratio exactly. */
+  .scroller__item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* ---- buttons ---- */
+  .scroller__btn {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition:
+      background-color 0.15s var(--ease),
+      opacity 0.15s var(--ease),
+      transform 0.15s var(--ease);
+  }
+  .scroller__btn:hover {
+    background: var(--surface-2);
+  }
+  .scroller__btn:active {
+    transform: translateY(-50%) scale(0.94);
+  }
+  .scroller__btn[disabled] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .scroller__btn--prev {
+    left: 0;
+  }
+  .scroller__btn--next {
+    right: 0;
+  }
+
+  /* One chevron icon, rotated into a left and a right arrow. */
+  .scroller__btn :global(svg) {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .scroller__btn--prev :global(svg) {
+    rotate: 90deg;
+  }
+  .scroller__btn--next :global(svg) {
+    rotate: -90deg;
+  }
+
+  @media (max-width: 1000px) {
+    .scroller {
+      --per-view: 3;
+    }
+  }
+  @media (max-width: 700px) {
+    .scroller {
+      --per-view: 2;
+    }
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-scroller]')) {
+    const track = root.querySelector<HTMLElement>('[data-scroller-track]');
+    const prev = root.querySelector<HTMLButtonElement>('[data-scroller-prev]');
+    const next = root.querySelector<HTMLButtonElement>('[data-scroller-next]');
+    if (!track || !prev || !next) continue;
+
+    const items = Array.from(track.querySelectorAll<HTMLElement>('li'));
+    if (items.length === 0) continue;
+
+    /** Width of one photo plus the gap — measured, so it survives a resize. */
+    const step = () => {
+      const first = items[0]!;
+      const second = items[1];
+      // Distance between two items' left edges is item width + gap exactly.
+      return second ? second.offsetLeft - first.offsetLeft : first.offsetWidth;
+    };
+
+    const sync = () => {
+      // 1px of slack: scrollLeft can land on a fractional pixel.
+      const max = track.scrollWidth - track.clientWidth;
+      prev.disabled = track.scrollLeft <= 1;
+      next.disabled = track.scrollLeft >= max - 1;
+    };
+
+    prev.addEventListener('click', () => track.scrollBy({ left: -step() }));
+    next.addEventListener('click', () => track.scrollBy({ left: step() }));
+
+    track.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
+    window.addEventListener('resize', sync);
+    sync();
+  }
+</script>

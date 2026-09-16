@@ -1,0 +1,56 @@
+---
+/**
+ * The official Venturing emblem, from the supplied `Venturing.svg`.
+ * Geometry and colours are the artwork's own — don't redraw them by hand.
+ *
+ * Placeholder until Crew 167 has a mark of its own. `public/favicon.svg` is the
+ * same artwork; replace both together.
+ *
+ * SIZING — important: this SVG fills its parent box (100% x 100%). Always wrap
+ * it in an element that has an explicit width and height, e.g.
+ *
+ *   <span class="brand__mark"><Logo title={false} /></span>
+ *
+ * Do NOT try to size it by putting width/height on a class you pass in from a
+ * parent component. Astro scopes styles with a `data-astro-cid-*` attribute
+ * that is not forwarded onto a child component's root element, so the rule
+ * silently never matches and the SVG gets stretched by whatever sits beside it.
+ */
+interface Props {
+  class?: string;
+  /** Decorative uses (sitting next to the crew name) should pass title={false}. */
+  title?: string | false;
+}
+const { class: className, title = 'Venturing' } = Astro.props;
+---
+
+<svg
+  class:list={['venturing-logo', className]}
+  viewBox="0 0 397.85 397.85"
+  xmlns="http://www.w3.org/2000/svg"
+  preserveAspectRatio="xMidYMid meet"
+  role={title === false ? 'presentation' : 'img'}
+  aria-label={title === false ? undefined : title}
+  aria-hidden={title === false ? 'true' : undefined}
+>
+  <polygon fill="#006338" points="397.85,198.924 198.928,0 0,198.924 198.928,397.85"></polygon>
+  <rect x="43.79" y="195.877" fill="#F7D117" width="312.005" height="4.978"></rect>
+  <polygon
+    fill="#F7D117"
+    points="70.316,220.235 120.427,220.235 218.077,314.196 312.143,220.235 335.293,220.235 204.655,354.574"
+  ></polygon>
+  <polygon
+    fill="#FFFFFF"
+    points="65.833,176.176 156.633,109.004 149.174,141.348 208.877,86.616 220.069,125.173 242.465,112.738 334.51,176.176 200.171,41.837"
+  ></polygon>
+</svg>
+
+<style>
+  /* Scoped inside this component, so it always matches — unlike a rule written
+     in a parent. The wrapper decides how big the logo is. */
+  .venturing-logo {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+</style>

@@ -1,0 +1,502 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import InstagramSection from '../components/InstagramSection.astro';
+import CrewCar from '../components/CrewCar.astro';
+import TopoBg from '../components/TopoBg.astro';
+import { SITE, MEETINGS, INTEGRATIONS, CONTACT } from '../config';
+import { upcomingMeetings, formatMeetingDate } from '../lib/meetings';
+import { pageCopy } from '../lib/sections';
+
+import PhotoCarousel from '../components/PhotoCarousel.astro';
+import { aboutPhotos } from '../lib/about-photos';
+
+// All of this page's prose lives in src/content/pages/home.md,
+// one "## section" per block below.
+const copy = await pageCopy('home');
+const Venturing = copy('venturing');
+const About = copy('about');
+const CrewCarCopy = copy('crew-car');
+const Adventures = copy('adventures');
+const Join = copy('join');
+
+const nextMeeting = upcomingMeetings(1)[0];
+
+// The four areas of the Venturing ALPS model, in ALPS order:
+// Adventure, Leadership, Personal Growth, Service.
+const pillars = [
+  {
+    icon: 'tent' as const,
+    title: 'Adventure',
+    body: 'Challenging outdoor activities, like backpacking and climbing, and easygoing activities, like exploring the city or going to rodeos. All of it is planned and led by the youth members.',
+  },
+  {
+    icon: 'compass' as const,
+    title: 'Leadership',
+    body: 'The youth members run the Crew, with guidance from the Advisors. Youth plan the activities, run the meetings, lead the outings, and keep the budgets.',
+  },
+  {
+    icon: 'sprout' as const,
+    title: 'Personal Growth',
+    body: 'Through insightful trainings and challenging activities, members develop confidence, resilience, and a sense of purpose. ',
+  },
+  {
+    icon: 'heart' as const,
+    title: 'Service',
+    body: 'Giving back to the community is a core part of Venturing. Members plan and lead service projects, and participate in community service events.',
+  },
+];
+
+const traditions = [
+  { name: 'Thanksgiving in the Woods', detail: 'Every November' },
+  { name: 'Parties', detail: 'Halloween and Christmas' },
+  { name: 'Room in the Inn', detail: 'Yearly service, January to March' },
+  { name: 'Rendezvous', detail: 'Annual VOA competition event' },
+];
+---
+
+<BaseLayout title={SITE.name}>
+  {/* ------------------------------------------------------------------ hero */}
+  <section class="hero">
+    <TopoBg />
+
+    <div class="wrap hero__inner">
+      <p class="eyebrow hero__eyebrow">Venturing Crew 167 - Charlotte, NC</p>
+      <h1 class="hero__title">Lead the <span>adventure.</span></h1>
+      <p class="hero__lede">
+        A co-ed Scouting America Venturing Crew for ages 14-20.
+      </p>
+
+      <div class="btn-row hero__actions">
+        <a class="btn btn--brass" href={INTEGRATIONS.joinUrl} rel="noopener">Register through Scouting America</a>
+        <a class="btn btn--on-dark" href="/contact/">Contact us</a>
+      </div>
+
+      <dl class="hero__facts">
+        <div>
+          <dt>Meetings</dt>
+          <dd>{MEETINGS.cadence}</dd>
+        </div>
+        <div>
+          <dt>Time</dt>
+          <dd>{MEETINGS.time}</dd>
+        </div>
+        <div>
+          <dt>Where</dt>
+          <dd>
+            <a href={MEETINGS.mapUrl} rel="noopener">{MEETINGS.venue} <br /> {MEETINGS.address}</a>
+          </dd>
+        </div>
+        {
+          nextMeeting && (
+            <div>
+              <dt>Next up</dt>
+              <dd data-next-meeting>{formatMeetingDate(nextMeeting.date)}</dd>
+            </div>
+          )
+        }
+      </dl>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------ venturing */}
+  <section class="section">
+    <div class="wrap">
+      <div class="venturing-intro">
+        <div class="section-head" data-reveal>
+          <p class="eyebrow">The program</p>
+          <h2>What is Venturing?</h2>
+          <div class="prose"><Venturing /></div>
+        </div>
+      </div>
+
+      <p class="eyebrow pillars__label" data-reveal>The ALPS model</p>
+      <ul class="pillars">
+        {
+          pillars.map((pillar, i) => (
+            <li class="card" data-reveal style={`--reveal-delay:${i * 90}ms`}>
+              <span class="card__icon">
+                <Icon name={pillar.icon} />
+              </span>
+              <h3>{pillar.title}</h3>
+              <p>{pillar.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ---------------------------------------------------------------- about */}
+  <section class="section section--sunken" id="about">
+    <div class="wrap split">
+      <div class="about-gallery" data-reveal>
+        <PhotoCarousel photos={aboutPhotos} label="Photos of Crew 167" />
+      </div>
+      <div class="split__body" data-reveal>
+        <p class="eyebrow">About us</p>
+        <h2>Who we are</h2>
+        <div class="prose"><About /></div>
+      </div>
+    </div>
+  </section>
+
+  {/* ------------------------------------------------------------- crew car */}
+  <section class="section crew-car-section">
+    <div class="wrap split split--reverse">
+      <div class="split__body" data-reveal>
+        <p class="eyebrow">A crew tradition</p>
+        <h2>The Crew Car</h2>
+        <div class="prose"><CrewCarCopy /></div>
+        <p class="small muted crew-car-section__hint">
+          Go on - give it a push.
+        </p>
+      </div>
+      <div class="split__media split__media--plain" data-reveal>
+        <CrewCar />
+      </div>
+    </div>
+  </section>
+
+  {/* --------------------------------------------------------- adventures */}
+  <section class="section section--sunken">
+    <div class="wrap">
+      <div class="section-head section-head--center" data-reveal>
+        <p class="eyebrow eyebrow--center">On the calendar</p>
+        <h2>What we get up to</h2>
+        <div class="prose" style="margin-inline:auto"><Adventures /></div>
+      </div>
+
+      <ul class="traditions" data-reveal>
+        {
+          traditions.map((item) => (
+            <li class="traditions__item">
+              <strong>{item.name}</strong>
+              <span class="small muted">{item.detail}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="center" style="margin-top:2rem">
+        <a class="btn btn--ghost" href="/calendar/">
+          <Icon name="calendar" />
+          See the full calendar
+        </a>
+      </p>
+    </div>
+  </section>
+
+  {/* ---------------------------------------------------------- instagram */}
+  <InstagramSection />
+
+  {/* --------------------------------------------------------------- join */}
+  <section class="section section--sunken">
+    <div class="wrap join__inner" data-reveal>
+      <div class="join__copy">
+        <p class="eyebrow">Interested?</p>
+        <h2>Come to a meeting</h2>
+        <div class="prose"><Join /></div>
+      </div>
+
+      <div class="join__card">
+        <dl class="deflist">
+          <div class="deflist__row">
+            <span class="deflist__icon"><Icon name="calendar" /></span>
+            <div>
+              <dt>When</dt>
+              <dd>{MEETINGS.cadence}<br />{MEETINGS.time}</dd>
+            </div>
+          </div>
+          <div class="deflist__row">
+            <span class="deflist__icon"><Icon name="pin" /></span>
+            <div>
+              <dt>Where</dt>
+              <dd>
+                <a href={MEETINGS.mapUrl} rel="noopener">
+                  {MEETINGS.venue}<br />{MEETINGS.address}
+                </a>
+              </dd>
+            </div>
+          </div>
+          <div class="deflist__row">
+            <span class="deflist__icon"><Icon name="mail" /></span>
+            <div>
+              <dt>Questions</dt>
+              <dd><a href={`mailto:${CONTACT.presidentEmail}`}>{CONTACT.presidentEmail}</a></dd>
+            </div>
+          </div>
+        </dl>
+
+        <div class="btn-row join__actions">
+          <a class="btn" href="/contact/">Send us a message</a>
+          <a class="btn btn--ghost" href={INTEGRATIONS.joinUrl} rel="noopener">Register with Scouting America</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ------------------------------------------------------------------ hero */
+  .hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: #fff;
+    background:
+      radial-gradient(70% 90% at 78% 8%, var(--band-glow-1), transparent 62%),
+      radial-gradient(90% 100% at 12% 100%, var(--band-glow-2), transparent 60%),
+      linear-gradient(170deg, var(--band-base), var(--band-deep));
+    padding-top: calc(var(--header-h) + clamp(3rem, 2rem + 6vw, 6.5rem));
+    padding-bottom: clamp(3rem, 2rem + 5vw, 5.5rem);
+    margin-top: calc(var(--header-h) * -1);
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green-500), var(--brass-400), var(--green-500));
+  }
+
+  .hero__inner {
+    position: relative;
+  }
+
+  .hero__eyebrow {
+    color: var(--brass-300);
+    margin-bottom: 1.1rem;
+  }
+
+  .hero__title {
+    font-size: var(--step-5);
+    color: #fff;
+    /* Wide enough that the headline never breaks mid-phrase; it only wraps on
+       very narrow phones, where it falls naturally after "Lead the". */
+    max-width: 20ch;
+  }
+  .hero__title span {
+    color: var(--green-200);
+  }
+
+  .hero__lede {
+    margin-top: 1.25rem;
+    font-size: var(--step-1);
+    line-height: 1.55;
+    color: rgb(255 255 255 / 0.8);
+    max-width: 54ch;
+  }
+
+  .hero__actions {
+    margin-top: 2rem;
+  }
+
+  .hero__facts {
+    margin-top: clamp(2.5rem, 1.8rem + 3vw, 4rem);
+    padding-top: 1.75rem;
+    border-top: 1px solid rgb(255 255 255 / 0.16);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr));
+    gap: 1.5rem;
+  }
+  .hero__facts dt {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass-300);
+    margin-bottom: 0.4rem;
+  }
+  .hero__facts dd {
+    margin: 0;
+    color: rgb(255 255 255 / 0.9);
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+  .hero__facts a {
+    color: inherit;
+    text-decoration-color: rgb(255 255 255 / 0.4);
+  }
+  .hero__facts a:hover {
+    color: var(--brass-300);
+  }
+
+  /* ------------------------------------------------------------- venturing */
+  .section-head .eyebrow {
+    margin-bottom: 0.8rem;
+  }
+  .section-head h2 {
+    margin-bottom: 1.1rem;
+  }
+
+  /* Copy on the left, Summit badge on the right, ALPS grid underneath. */
+  .venturing-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(1.5rem, 1rem + 3vw, 4rem);
+    margin-bottom: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+  }
+  .venturing-intro .section-head {
+    margin-bottom: 0;
+  }
+
+  .venturing-badge {
+    flex: none;
+    /* Roughly the height of the copy block beside it. */
+    width: clamp(150px, 16vw, 225px);
+  }
+
+  @media (max-width: 820px) {
+    .venturing-intro {
+      flex-direction: column;
+      align-items: center;
+    }
+    .venturing-badge {
+      width: min(160px, 45vw);
+    }
+  }
+
+  .pillars__label {
+    margin-bottom: 1.1rem;
+  }
+
+  /* The four ALPS areas, as a 2x2 block under the copy. */
+  .pillars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 0.7rem + 1vw, 1.5rem);
+  }
+
+  @media (max-width: 640px) {
+    .pillars {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ----------------------------------------------------------------- split */
+  .split {
+    display: grid;
+    gap: clamp(1.75rem, 1.2rem + 3vw, 3.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    align-items: center;
+  }
+  /* The about carousel is a plain grid child; it brings its own framing,
+     so it deliberately does not use .split__media's image styling. */
+  .about-gallery {
+    min-width: 0;
+  }
+
+  .split--reverse .split__media {
+    order: 2;
+  }
+  @media (max-width: 860px) {
+    .split--reverse .split__media {
+      order: 0;
+    }
+  }
+
+  .split__media :global(img) {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .split__media--plain :global(img) {
+    box-shadow: none;
+  }
+
+  .split__body .eyebrow {
+    margin-bottom: 0.8rem;
+  }
+  .split__body .eyebrow :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+  .split__body h2 {
+    margin-bottom: 1.1rem;
+  }
+
+  .crew-car-section__hint {
+    margin-top: 1.25rem;
+    font-style: italic;
+  }
+
+  /* ------------------------------------------------------------ traditions */
+  .traditions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  }
+  .traditions__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 1rem 1.15rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+  }
+  .traditions__item strong {
+    font-family: var(--font-display);
+    font-weight: 620;
+  }
+
+  /* ------------------------------------------------------------------ join
+     This band is a light `section--sunken`, so everything here inherits the
+     normal light-surface tokens. It used to be a dark green band; if it goes
+     back to dark, these colour overrides need to come back with it. */
+  .join__inner {
+    position: relative;
+    display: grid;
+    gap: clamp(1.75rem, 1.2rem + 3vw, 3.5rem);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    align-items: center;
+  }
+  .join__copy h2 {
+    margin-bottom: 1.1rem;
+  }
+  .join__copy .eyebrow {
+    margin-bottom: 0.8rem;
+  }
+
+  .join__card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.35rem, 1rem + 1.4vw, 2rem);
+    box-shadow: var(--shadow-sm);
+  }
+  .join__card :global(dd) {
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+  .join__card :global(dd a) {
+    color: var(--accent-ink);
+  }
+  .join__card :global(dd a:hover) {
+    color: var(--highlight);
+  }
+  .join__actions {
+    margin-top: 1.75rem;
+  }
+</style>
+
+<script>
+  // Keep "Next up" honest even if the site hasn't been rebuilt in a while.
+  import { upcomingMeetings, formatMeetingDate } from '../lib/meetings';
+
+  const slot = document.querySelector<HTMLElement>('[data-next-meeting]');
+  const next = upcomingMeetings(1)[0];
+  if (slot && next) slot.textContent = formatMeetingDate(next.date);
+</script>
