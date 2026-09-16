@@ -1,6 +1,7 @@
 # matthew's additions
 SETUP.md
 .env.example
+scripts/
 
 # build output
 dist/
